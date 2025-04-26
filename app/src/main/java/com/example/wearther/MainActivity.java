@@ -31,7 +31,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "WeatherTest";
+    private static final String TAG = "WeatherTest"; // yuwon branch
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
