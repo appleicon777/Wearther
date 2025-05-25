@@ -5,9 +5,9 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-interface WeatherService {
+public interface WeatherServiceRaw {
     @GET("getVilageFcst")
-    Call<WeatherResponse> getForecast(
+    Call<ResponseBody> getRawForecast(
             @Query("serviceKey") String serviceKey,
             @Query("pageNo") int pageNo,
             @Query("numOfRows") int numOfRows,
