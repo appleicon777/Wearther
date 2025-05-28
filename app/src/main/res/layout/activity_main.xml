@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,13 +8,59 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- 날씨 결과 출력 텍스트 -->
     <TextView
+        android:id="@+id/textViewResult"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="날씨 결과 출력"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:background="#EEEEEE"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp" />
+
+    <!-- 활동 시간 텍스트 -->
+    <TextView
+        android:id="@+id/textViewTimeRange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="활동 시간: 9시 ~ 18시"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/textViewResult"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp" />
+
+    <!-- 활동 시간 슬라이더 -->
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/timeRangeSlider"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="23"
+        android:stepSize="1"
+        app:values="@array/default_time_range"
+        app:layout_constraintTop_toBottomOf="@id/textViewTimeRange"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp" />
+
+    <!-- 추천받기 버튼 -->
+    <Button
+        android:id="@+id/buttonRecommend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="추천받기"
+        app:layout_constraintTop_toBottomOf="@id/timeRangeSlider"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
