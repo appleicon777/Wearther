@@ -16,15 +16,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Wearther"
         tools:targetApi="31">
+
+        <!-- 메인 액티비티 -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+        <!-- 추천 결과 화면 액티비티 등록 -->
+        <activity android:name=".RecommendationActivity" />
+    </application>
 </manifest>

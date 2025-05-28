@@ -1,6 +1,7 @@
 package com.example.wearther;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -83,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             requestLocation();
         }
+        findViewById(R.id.buttonRecommend).setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, RecommendationActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     @Override
