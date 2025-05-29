@@ -199,8 +199,21 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     String weatherString = "날씨: " + condition;
-                    if (condition.equals("맑음") && rainStart != null && rainEnd != null) {
-                        weatherString += " (비: " + rainStart + "시~" + rainEnd + "시)";
+                    if ((condition.equals("맑음") || condition.equals("비") || condition.equals("눈"))
+                            && rainStart != null && rainEnd != null) {
+
+                        String phenomenon = "비";
+                        for (WeatherResponse.ForecastItem item : items) {
+                            if ("PTY".equals(item.category) && nowDate.equals(item.fcstDate)) {
+                                if (item.fcstTime.substring(0, 2).equals(rainStart)) {
+                                    if (item.fcstValue.equals("3") || item.fcstValue.equals("4")) {
+                                        phenomenon = "눈";
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        weatherString += " (" + phenomenon + ": " + rainStart + "시~" + rainEnd + "시)";
                     }
 
 
