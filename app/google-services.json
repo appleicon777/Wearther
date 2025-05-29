@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "369867271398",
+    "project_id": "wearther-c6ceb",
+    "storage_bucket": "wearther-c6ceb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369867271398:android:2fda54927f211461619f27",
+        "android_client_info": {
+          "package_name": "com.example.wearther"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "369867271398-euig7jito0e8vlp0ql2lclibbem034ab.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wearther",
+            "certificate_hash": "f46c26ebfaf6e70fc788311f7eda690dff6689a8"
+          }
+        },
+        {
+          "client_id": "369867271398-jjfkcnncbdu67onr096vmm7ipa5g46rb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkph9QgSVxpghnf5xfBrFYOIa0Wt0XU2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "369867271398-jjfkcnncbdu67onr096vmm7ipa5g46rb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
