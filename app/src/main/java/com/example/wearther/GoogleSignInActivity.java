@@ -20,7 +20,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_google_sign_in);
+        // setContentView(R.layout.activity_google_sign_in); // 레이아웃 필요 없음
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -31,8 +31,10 @@ public class GoogleSignInActivity extends AppCompatActivity {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        Button signInButton = findViewById(R.id.buttonGoogleSignIn);
-        signInButton.setOnClickListener(v -> signIn());
+        // Button signInButton = findViewById(R.id.buttonGoogleSignIn);
+        // signInButton.setOnClickListener(v -> signIn());
+
+        signIn(); // 액티비티 시작 시 바로 구글 로그인 플로우 실행
     }
 
     private void signIn() {
