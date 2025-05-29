@@ -24,7 +24,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -124,10 +126,18 @@ public class MainActivity extends AppCompatActivity {
         int startHour = Math.round(sliderValues.get(0));
         int endHour = Math.round(sliderValues.get(1));
 
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
+                .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+
 
         WeatherService service = retrofit.create(WeatherService.class);
 
@@ -166,31 +176,53 @@ public class MainActivity extends AppCompatActivity {
                     int meantemp = tempMean.getMeanTemp(items, startHour, endHour);
 
                     String condition = "맑음";
+                    String rainStart = null;
+                    String rainEnd = null;
+                    String currentTime = new SimpleDateFormat("HHmm", Locale.getDefault()).format(new Date());
+
                     for (WeatherResponse.ForecastItem item : items) {
-                        if ("PTY".equals(item.category)) {
-                            switch (item.fcstValue) {
-                                case "1": case "2":
-                                    condition = "비"; break;
-                                case "3": case "4":
-                                    condition = "눈"; break;
+                        if ("PTY".equals(item.category) && nowDate.equals(item.fcstDate)) {
+                            String pty = item.fcstValue;
+                            if (pty.equals("1") || pty.equals("2") || pty.equals("3") || pty.equals("4")) {
+                                if (item.fcstTime.compareTo(currentTime) <= 0) {
+                                    // 비가 이미 오고 있는 경우
+                                    condition = pty.equals("3") || pty.equals("4") ? "눈" : "비";
+                                } else {
+                                    // 비가 올 예정
+                                    if (rainStart == null) {
+                                        rainStart = item.fcstTime.substring(0, 2); // 시작 시각
+                                    }
+                                    rainEnd = item.fcstTime.substring(0, 2); // 마지막 시각 (계속 갱신)
+                                }
                             }
-                            break;
                         }
                     }
+
+                    String weatherString = "날씨: " + condition;
+                    if (condition.equals("맑음") && rainStart != null && rainEnd != null) {
+                        weatherString += " (비: " + rainStart + "시~" + rainEnd + "시)";
+                    }
+
+
+                    WeatherResponse.ForecastItem matchedTempItem = null;
 
                     for (WeatherResponse.ForecastItem item : items) {
-                        if ("TMP".equals(item.category) && nowDate.equals(item.fcstDate) && closestTime.equals(item.fcstTime)) {
-                            String msg = "예보 기온: " + item.fcstValue + "℃ (" + item.fcstTime + ")\n"
-                                    + "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)\n"
-                                    + "날씨: " + condition;
-                            textViewResult.setText(msg);
-                            Log.d(TAG, msg); // 디버깅용 로그 출력도 추가
-                            return;
+                        if ("TMP".equals(item.category) && nowDate.equals(item.fcstDate)) {
+                            matchedTempItem = item;
+                            break; // 가장 빠른 TMP 예보 하나만 사용
                         }
                     }
 
+                    if (matchedTempItem != null) {
+                        String msg = "예보 기온: " + matchedTempItem.fcstValue + "℃ (" + matchedTempItem.fcstTime + ")\n"
+                                + "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)\n"
+                                + weatherString;
+                        textViewResult.setText(msg);
+                        Log.d(TAG, msg); // 디버깅용 로그
+                    } else {
+                        textViewResult.setText("기온 정보 없음");
+                    }
 
-                    textViewResult.setText("기온 정보 없음");
                 } else {
                     textViewResult.setText("서버 오류");
                 }
