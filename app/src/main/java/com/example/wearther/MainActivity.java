@@ -1,7 +1,6 @@
 package com.example.wearther;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -43,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private List<WeatherResponse.ForecastItem> forecastItems;
 
+
     private final String BASE_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/";
     private final String SERVICE_KEY = "akcVCcpt2hMlytifqM9VPdV0gTs08X0nS5j09JImhRmA8pvGjNExBs80aLUvJ26uk7n0XUVXltc52mlfgmONQw==";
 
@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -84,11 +85,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             requestLocation();
         }
-        findViewById(R.id.buttonRecommend).setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, RecommendationActivity.class);
-            startActivity(intent);
-        });
-
     }
 
     @Override
@@ -110,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10, new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                double latitude = 37.3789;
-                double longitude = 127.1159;
+                double latitude = 37.3789; //location.getLatitude();
+                double longitude = 127.1159; //location.getLongitude();
                 Log.d(TAG, "받아온 위경도: lat = " + latitude + ", lon = " + longitude);
                 int[] grid = convertGPS(latitude, longitude);
                 Log.d(TAG, "변환된 좌표: nx = " + grid[0] + ", ny = " + grid[1]);
@@ -136,8 +132,14 @@ public class MainActivity extends AppCompatActivity {
         WeatherService service = retrofit.create(WeatherService.class);
 
         Call<WeatherResponse> call = service.getForecast(
-                SERVICE_KEY, 1, 1000, "JSON",
-                baseDate, baseTime, nx, ny
+                SERVICE_KEY,
+                1,
+                1000,
+                "JSON",
+                baseDate,
+                baseTime,
+                nx,
+                ny
         );
 
         call.enqueue(new Callback<WeatherResponse>() {
@@ -156,13 +158,21 @@ public class MainActivity extends AppCompatActivity {
                     String nowDate = new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date());
                     String nowTime = new SimpleDateFormat("HHmm", Locale.getDefault()).format(new Date());
                     String closestTime = getClosestForecastTime(nowTime);
+                    List<Float> sliderValues = timeRangeSlider.getValues();
+                    int startHour = Math.round(sliderValues.get(0));
+                    int endHour = Math.round(sliderValues.get(1));
+
+                    // 평균 기온 계산
+                    int meantemp = tempMean.getMeanTemp(items, startHour, endHour);
 
                     String condition = "맑음";
                     for (WeatherResponse.ForecastItem item : items) {
                         if ("PTY".equals(item.category)) {
                             switch (item.fcstValue) {
-                                case "1": case "2": condition = "비"; break;
-                                case "3": case "4": condition = "눈"; break;
+                                case "1": case "2":
+                                    condition = "비"; break;
+                                case "3": case "4":
+                                    condition = "눈"; break;
                             }
                             break;
                         }
@@ -174,10 +184,11 @@ public class MainActivity extends AppCompatActivity {
                                     + "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)\n"
                                     + "날씨: " + condition;
                             textViewResult.setText(msg);
-                            Log.d(TAG, msg);
+                            Log.d(TAG, msg); // 디버깅용 로그 출력도 추가
                             return;
                         }
                     }
+
 
                     textViewResult.setText("기온 정보 없음");
                 } else {
@@ -199,8 +210,10 @@ public class MainActivity extends AppCompatActivity {
 
         int baseHour;
 
-        if (minute < 45) hour -= 1;
-        if (hour < 0) hour = 23;
+        if (minute < 45) {
+            hour -= 1;
+            if (hour < 0) hour = 23;
+        }
 
         if (hour >= 23) baseHour = 23;
         else if (hour >= 20) baseHour = 20;
@@ -221,20 +234,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int[] convertGPS(double lat, double lon) {
-        double RE = 6371.00877, GRID = 5.0, SLAT1 = 30.0, SLAT2 = 60.0;
-        double OLON = 126.0, OLAT = 38.0, XO = 43, YO = 136;
-        double DEGRAD = Math.PI / 180.0, re = RE / GRID;
-        double slat1 = SLAT1 * DEGRAD, slat2 = SLAT2 * DEGRAD;
-        double olon = OLON * DEGRAD, olat = OLAT * DEGRAD;
+        double RE = 6371.00877;
+        double GRID = 5.0;
+        double SLAT1 = 30.0;
+        double SLAT2 = 60.0;
+        double OLON = 126.0;
+        double OLAT = 38.0;
+        double XO = 43;
+        double YO = 136;
+
+        double DEGRAD = Math.PI / 180.0;
+        double re = RE / GRID;
+        double slat1 = SLAT1 * DEGRAD;
+        double slat2 = SLAT2 * DEGRAD;
+        double olon = OLON * DEGRAD;
+        double olat = OLAT * DEGRAD;
+
         double sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) /
                 Math.log(Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5));
         double sf = Math.pow(Math.tan(Math.PI * 0.25 + slat1 * 0.5), sn) * Math.cos(slat1) / sn;
         double ro = re * sf / Math.pow(Math.tan(Math.PI * 0.25 + olat * 0.5), sn);
+
         double ra = re * sf / Math.pow(Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5), sn);
         double theta = lon * DEGRAD - olon;
         if (theta > Math.PI) theta -= 2.0 * Math.PI;
         if (theta < -Math.PI) theta += 2.0 * Math.PI;
         theta *= sn;
+
         int x = (int) (ra * Math.sin(theta) + XO + 0.5);
         int y = (int) (ro - ra * Math.cos(theta) + YO + 0.5);
         return new int[]{x, y};
