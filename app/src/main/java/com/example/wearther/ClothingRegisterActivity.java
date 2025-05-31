@@ -65,6 +65,7 @@ public class ClothingRegisterActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_IMAGE_PICK);
         } else {
             Intent pickPhoto = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            pickPhoto.setType("image/*");
             startActivityForResult(pickPhoto, REQUEST_IMAGE_PICK);
         }
     }
@@ -72,8 +73,8 @@ public class ClothingRegisterActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_CAPTURE && data != null) {
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap photo = (Bitmap) data.getExtras().get("data");
                 imageViewPreview.setImageBitmap(photo);
                 VisionApiHelper.extractMetaData(this, photo, metaData -> {
@@ -85,7 +86,7 @@ public class ClothingRegisterActivity extends AppCompatActivity {
                         }
                     });
                 });
-            } else if (requestCode == REQUEST_IMAGE_PICK && data != null) {
+            } else if (requestCode == REQUEST_IMAGE_PICK) {
                 imageUri = data.getData();
                 imageViewPreview.setImageURI(imageUri);
 
@@ -106,6 +107,8 @@ public class ClothingRegisterActivity extends AppCompatActivity {
                     Toast.makeText(this, "이미지 처리 오류", Toast.LENGTH_SHORT).show();
                 }
             }
+        } else {
+            Toast.makeText(this, "이미지 선택이 취소되었거나 실패했습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
