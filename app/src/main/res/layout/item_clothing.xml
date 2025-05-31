@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="12dp"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:padding="8dp">
 
-    <TextView android:id="@+id/clothingName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="옷 이름" android:textSize="16sp"/>
+    <ImageView
+        android:id="@+id/imageViewClothing"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="16dp"/>
 
-    <TextView android:id="@+id/clothingWarmth"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="warmthLevel" android:textSize="14sp"/>
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/textViewName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="옷 이름"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <!-- 필요하다면 추가 정보 표시 -->
+    </LinearLayout>
 </LinearLayout>

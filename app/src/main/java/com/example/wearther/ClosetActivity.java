@@ -5,6 +5,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -22,16 +25,29 @@ public class ClosetActivity extends AppCompatActivity {
         adapter = new ClothingAdapter();
         recyclerView.setAdapter(adapter);
 
-        Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-            List<ClothingItem> allItems = db.clothingItemDao().getAll();
-            runOnUiThread(() -> {
-                if (allItems.isEmpty()) {
+        // Firestore에서 옷 목록 불러오기
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("clothingItems")
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                ArrayList<ClothingItem> items = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    ClothingItem item = new ClothingItem();
+                    item.name = doc.getString("label");
+                    item.imageUri = doc.getString("imageUrl");
+                    // Firestore에 warmthLevel, category 등이 있다면 아래처럼 추가
+                    // item.warmthLevel = doc.getLong("warmthLevel") != null ? doc.getLong("warmthLevel").intValue() : 0;
+                    // item.category = doc.getString("category");
+                    items.add(item);
+                }
+                adapter.setItems(items);
+                if (items.isEmpty()) {
                     Toast.makeText(this, "등록된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
                 }
-                adapter.setItems(allItems);
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(this, "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
-        });
 
         findViewById(R.id.buttonBack).setOnClickListener(v -> finish());
         ((android.widget.TextView)findViewById(R.id.resultText)).setText("내 옷장");

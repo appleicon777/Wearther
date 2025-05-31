@@ -3,8 +3,11 @@ package com.example.wearther;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,12 +21,14 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHo
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView nameView, levelView;
+        ImageView imageViewClothing;
+        TextView textViewName, levelView;
 
-        public ViewHolder(View view) {
-            super(view);
-            nameView = view.findViewById(R.id.clothingName);
-            levelView = view.findViewById(R.id.clothingWarmth);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            imageViewClothing = itemView.findViewById(R.id.imageViewClothing);
+            textViewName = itemView.findViewById(R.id.textViewName);
+            levelView = itemView.findViewById(R.id.clothingWarmth);
         }
     }
 
@@ -35,10 +40,16 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ClothingItem item = items.get(position);
-        holder.nameView.setText(item.name + " (" + item.category + ")");
+        holder.textViewName.setText(item.name + " (" + item.category + ")");
         holder.levelView.setText("warmthLevel: " + item.warmthLevel);
+
+        // 이미지 표시
+        Glide.with(holder.itemView.getContext())
+                .load(item.imageUri)
+                .placeholder(R.drawable.ic_launcher_background) // 기본 이미지
+                .into(holder.imageViewClothing);
     }
 
     @Override
