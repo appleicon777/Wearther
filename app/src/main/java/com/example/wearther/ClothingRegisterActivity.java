@@ -23,6 +23,7 @@ import com.google.firebase.storage.StorageReference;
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import android.app.AlertDialog;
 
 public class ClothingRegisterActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
