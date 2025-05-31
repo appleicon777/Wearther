@@ -15,7 +15,7 @@ public class ClosetActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recommendation); // 재사용
+        setContentView(R.layout.activity_closet); // 변경: 옷장 전용 레이아웃 사용
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
