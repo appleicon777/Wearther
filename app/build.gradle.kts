@@ -1,6 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    FileInputStream(localPropertiesFile).use { fis ->
+        localProperties.load(fis)
+    }
 }
 
 android {
@@ -15,6 +27,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val visionApiKey: String = localProperties.getProperty("VISION_API_KEY", "\"\"")
+        buildConfigField("String", "VISION_API_KEY", visionApiKey)
+        buildFeatures {
+            buildConfig = true
+        }
     }
 
     buildTypes {
