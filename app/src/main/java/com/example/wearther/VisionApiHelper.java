@@ -1,61 +1,84 @@
 package com.example.wearther;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.POST;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.util.Base64;
+import androidx.annotation.WorkerThread;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.HashMap;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.OutputStream;
 
-import java.io.IOException;
-
-public class CloudVisionService {
-
-    private static final String BASE_URL = "https://vision.googleapis.com/v1/";
-    private static final String API_KEY = "YOUR_API_KEY"; // Replace with your actual API key
-
-    private final VisionApi visionApi;
-
-    public CloudVisionService() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        visionApi = retrofit.create(VisionApi.class);
+public class VisionApiHelper {
+    public interface MetaDataCallback {
+        void onResult(Map<String, String> metaData);
     }
 
-    public Call<JsonObject> analyzeImage(String imageBase64) {
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"),
-                createRequestBody(imageBase64));
+    public static void extractMetaData(Context context, Bitmap bitmap, MetaDataCallback callback) {
+        new Thread(() -> {
+            try {
+                // 1. Bitmap을 Base64로 변환
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+                String base64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
 
-        return visionApi.analyzeImage(API_KEY, body);
-    }
+                // 2. Vision API 요청 JSON 생성
+                JSONObject request = new JSONObject();
+                JSONArray requests = new JSONArray();
+                JSONObject image = new JSONObject();
+                image.put("content", base64);
+                JSONObject feature = new JSONObject();
+                feature.put("type", "LABEL_DETECTION");
+                feature.put("maxResults", 5);
+                JSONArray features = new JSONArray();
+                features.put(feature);
+                JSONObject req = new JSONObject();
+                req.put("image", image);
+                req.put("features", features);
+                requests.put(req);
+                request.put("requests", requests);
 
-    private String createRequestBody(String imageBase64) {
-        JsonObject requestBody = new JsonObject();
-        JsonObject image = new JsonObject();
-        image.addProperty("content", imageBase64);
-        requestBody.add("image", image);
-        requestBody.add("features", createFeatureArray());
-        return new Gson().toJson(requestBody);
-    }
+                // 3. Vision API 호출
+                URL url = new URL("https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setDoOutput(true);
+                OutputStream os = conn.getOutputStream();
+                os.write(request.toString().getBytes("UTF-8"));
+                os.close();
 
-    private JsonObject createFeatureArray() {
-        JsonObject feature = new JsonObject();
-        feature.addProperty("type", "LABEL_DETECTION");
-        feature.addProperty("maxResults", 10);
-        return feature;
-    }
+                // 4. 응답 파싱
+                InputStream is = conn.getInputStream();
+                ByteArrayOutputStream respBaos = new ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = is.read(buf)) != -1) respBaos.write(buf, 0, len);
+                String resp = new String(respBaos.toByteArray(), "UTF-8");
+                JSONObject respJson = new JSONObject(resp);
+                JSONArray labels = respJson.getJSONArray("responses")
+                        .getJSONObject(0)
+                        .getJSONArray("labelAnnotations");
 
-    interface VisionApi {
-        @POST("images:annotate")
-        Call<JsonObject> analyzeImage(@retrofit2.http.Query("key") String apiKey, @Body RequestBody body);
+                Map<String, String> meta = new HashMap<>();
+                if (labels.length() > 0) {
+                    meta.put("label", labels.getJSONObject(0).getString("description"));
+                }
+                // 필요에 따라 color 등 추가 추출
+
+                // 5. 콜백
+                callback.onResult(meta);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                callback.onResult(null);
+            }
+        }).start();
     }
 }

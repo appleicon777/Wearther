@@ -1,6 +1,7 @@
 package com.example.wearther;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -8,6 +9,9 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -89,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        Button buttonRegisterClothing = findViewById(R.id.buttonRegisterClothing);
+        buttonRegisterClothing.setOnClickListener(v -> showRegisterClothingDialog());
     }
 
     @Override
@@ -238,5 +244,35 @@ public class MainActivity extends AppCompatActivity {
         int x = (int) (ra * Math.sin(theta) + XO + 0.5);
         int y = (int) (ro - ra * Math.cos(theta) + YO + 0.5);
         return new int[]{x, y};
+    }
+
+    private void showRegisterClothingDialog() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_register_clothing, null);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setTitle("옷 등록")
+                .setNegativeButton("취소", null)
+                .create();
+
+        Button buttonCamera = dialogView.findViewById(R.id.buttonCamera);
+        Button buttonGallery = dialogView.findViewById(R.id.buttonGallery);
+
+        buttonCamera.setOnClickListener(v -> {
+            dialog.dismiss();
+            Intent intent = new Intent(this, ClothingRegisterActivity.class);
+            intent.putExtra("mode", "camera");
+            startActivity(intent);
+        });
+
+        buttonGallery.setOnClickListener(v -> {
+            dialog.dismiss();
+            Intent intent = new Intent(this, ClothingRegisterActivity.class);
+            intent.putExtra("mode", "gallery");
+            startActivity(intent);
+        });
+
+        dialog.show();
     }
 }
