@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -29,7 +30,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -75,10 +78,53 @@ public class MainActivity extends AppCompatActivity {
             if (forecastItems != null) {
                 int meanTemp = tempMean.getMeanTemp(forecastItems, startHour, endHour);
                 String current = textViewResult.getText().toString();
-                String updated = current.replaceAll("예보 평균 기온: .*?℃", "예보 평균 기온: " + meanTemp + "℃");
+                String updated = current.replaceAll("예보 평균 기온: .*?\\(.*?\\)",
+                        "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)");
                 textViewResult.setText(updated);
             }
         });
+
+        Button buttonRecommend = findViewById(R.id.buttonRecommend);
+        buttonRecommend.setOnClickListener(v -> {
+            if (forecastItems == null) {
+                textViewResult.setText("날씨 정보가 없습니다. 잠시 후 다시 시도해주세요.");
+                return;
+            }
+
+            int startHour = Math.round(timeRangeSlider.getValues().get(0));
+            int endHour = Math.round(timeRangeSlider.getValues().get(1));
+            int meanTemp = tempMean.getMeanTemp(forecastItems, startHour, endHour);
+
+            boolean isRaining = false;
+            boolean isSnowing = false;
+            for (WeatherResponse.ForecastItem item : forecastItems) {
+                if ("PTY".equals(item.category)) {
+                    if ("1".equals(item.fcstValue) || "4".equals(item.fcstValue)) isRaining = true;
+                    if ("3".equals(item.fcstValue)) isSnowing = true;
+                    if ("2".equals(item.fcstValue)) {
+                        int temp = getTempAtTime(forecastItems, item.fcstTime);
+                        if (temp < 4) isSnowing = true;
+                        else isRaining = true;
+                    }
+                }
+            }
+
+            // 실외 활동 여부 전달
+            CheckBox checkBoxOutdoor = findViewById(R.id.checkbox_outdoor);
+            boolean isOutdoor = checkBoxOutdoor.isChecked();
+
+            Intent intent = new Intent(MainActivity.this, RecommendationActivity.class);
+            intent.putExtra("meanTemp", meanTemp);
+            intent.putExtra("startHour", startHour);
+            intent.putExtra("endHour", endHour);
+            intent.putExtra("isRaining", isRaining);
+            intent.putExtra("isSnowing", isSnowing);
+            intent.putExtra("isOutdoor", isOutdoor);
+
+            startActivity(intent);
+        });
+
+
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -88,10 +134,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             requestLocation();
         }
-        findViewById(R.id.buttonRecommend).setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, RecommendationActivity.class);
-            startActivity(intent);
-        });
 
         Button buttonRegisterClothing = findViewById(R.id.buttonRegisterClothing);
         buttonRegisterClothing.setOnClickListener(v -> showRegisterClothingDialog());
@@ -122,8 +164,8 @@ public class MainActivity extends AppCompatActivity {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10, new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                double latitude = 37.3789;
-                double longitude = 127.1159;
+                double latitude = 37.3789; // location.getLatitude();
+                double longitude = 127.1159; // location.getLongitude();
                 Log.d(TAG, "받아온 위경도: lat = " + latitude + ", lon = " + longitude);
                 int[] grid = convertGPS(latitude, longitude);
                 Log.d(TAG, "변환된 좌표: nx = " + grid[0] + ", ny = " + grid[1]);
@@ -140,16 +182,22 @@ public class MainActivity extends AppCompatActivity {
         int startHour = Math.round(sliderValues.get(0));
         int endHour = Math.round(sliderValues.get(1));
 
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
+                .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         WeatherService service = retrofit.create(WeatherService.class);
 
         Call<WeatherResponse> call = service.getForecast(
-                SERVICE_KEY, 1, 1000, "JSON",
-                baseDate, baseTime, nx, ny
+                SERVICE_KEY, 1, 1000, "JSON", baseDate, baseTime, nx, ny
         );
 
         call.enqueue(new Callback<WeatherResponse>() {
@@ -170,28 +218,80 @@ public class MainActivity extends AppCompatActivity {
                     String closestTime = getClosestForecastTime(nowTime);
 
                     String condition = "맑음";
+                    String rainStart = null;
+                    String rainEnd = null;
+                    String currentTime = new SimpleDateFormat("HHmm", Locale.getDefault()).format(new Date());
+
                     for (WeatherResponse.ForecastItem item : items) {
-                        if ("PTY".equals(item.category)) {
-                            switch (item.fcstValue) {
-                                case "1": case "2": condition = "비"; break;
-                                case "3": case "4": condition = "눈"; break;
+                        if ("PTY".equals(item.category) && nowDate.equals(item.fcstDate)) {
+                            String pty = item.fcstValue;
+                            if (pty.matches("[1-4]")) {
+                                if (item.fcstTime.compareTo(currentTime) <= 0) {
+                                    switch (pty) {
+                                        case "1":
+                                        case "4":
+                                            condition = "비";
+                                            break;
+                                        case "3":
+                                            condition = "눈";
+                                            break;
+                                        case "2":
+                                            condition = getTempAtTime(items, item.fcstTime) < 4 ? "눈" : "비";
+                                            break;
+                                    }
+                                } else {
+                                    if (rainStart == null) rainStart = item.fcstTime;
+                                    rainEnd = item.fcstTime;
+                                }
                             }
+                        }
+                    }
+
+
+                    String weatherString = "날씨: " + condition;
+                    if ((condition.equals("맑음") || condition.equals("비") || condition.equals("눈"))
+                            && rainStart != null && rainEnd != null) {
+
+                        String phenomenon = "비";
+                        for (WeatherResponse.ForecastItem item : items) {
+                            if ("PTY".equals(item.category) && nowDate.equals(item.fcstDate)
+                                    && item.fcstTime.equals(rainStart)) {
+                                switch (item.fcstValue) {
+                                    case "3":
+                                        phenomenon = "눈";
+                                        break;
+                                    case "2":
+                                        phenomenon = getTempAtTime(items, item.fcstTime) < 4 ? "눈" : "비";
+                                        break;
+                                    case "4":
+                                    case "1":
+                                        phenomenon = "비";
+                                        break;
+                                }
+                                break;
+                            }
+                        }
+
+                        weatherString += " (" + phenomenon + ": " + rainStart.substring(0, 2) + "시~" + rainEnd.substring(0, 2) + "시)";
+                    }
+
+                    WeatherResponse.ForecastItem matchedTempItem = null;
+                    for (WeatherResponse.ForecastItem item : items) {
+                        if ("TMP".equals(item.category) && nowDate.equals(item.fcstDate)) {
+                            matchedTempItem = item;
                             break;
                         }
                     }
 
-                    for (WeatherResponse.ForecastItem item : items) {
-                        if ("TMP".equals(item.category) && nowDate.equals(item.fcstDate) && closestTime.equals(item.fcstTime)) {
-                            String msg = "예보 기온: " + item.fcstValue + "℃ (" + item.fcstTime + ")\n"
-                                    + "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)\n"
-                                    + "날씨: " + condition;
-                            textViewResult.setText(msg);
-                            Log.d(TAG, msg);
-                            return;
-                        }
+                    if (matchedTempItem != null) {
+                        String msg = "예보 기온: " + matchedTempItem.fcstValue + "℃ (" + matchedTempItem.fcstTime + ")\n"
+                                + "예보 평균 기온: " + meanTemp + "℃ (" + startHour + "시 ~ " + endHour + "시)\n"
+                                + weatherString;
+                        textViewResult.setText(msg);
+                        Log.d(TAG, msg);
+                    } else {
+                        textViewResult.setText("기온 정보 없음");
                     }
-
-                    textViewResult.setText("기온 정보 없음");
                 } else {
                     textViewResult.setText("서버 오류");
                 }
@@ -205,26 +305,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private int getTempAtTime(List<WeatherResponse.ForecastItem> items, String targetTime) {
+        String nowDate = new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date());
+        for (WeatherResponse.ForecastItem item : items) {
+            if ("TMP".equals(item.category)
+                    && nowDate.equals(item.fcstDate)
+                    && item.fcstTime.equals(targetTime)) {
+                try {
+                    return Integer.parseInt(item.fcstValue);
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "기온 변환 실패: " + item.fcstValue);
+                }
+            }
+        }
+        return 5; // 기본값은 걍 봄날 기온으로.
+    }
+
     private String getBaseTime() {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         int minute = Calendar.getInstance().get(Calendar.MINUTE);
-
-        int baseHour;
-
-        if (minute < 45) hour -= 1;
+        if (minute < 45) hour--;
         if (hour < 0) hour = 23;
 
-        if (hour >= 23) baseHour = 23;
-        else if (hour >= 20) baseHour = 20;
-        else if (hour >= 17) baseHour = 17;
-        else if (hour >= 14) baseHour = 14;
-        else if (hour >= 11) baseHour = 11;
-        else if (hour >= 8) baseHour = 8;
-        else if (hour >= 5) baseHour = 5;
-        else if (hour >= 2) baseHour = 2;
-        else baseHour = 23;
-
-        return String.format("%02d00", baseHour);
+        int[] baseHours = {2, 5, 8, 11, 14, 17, 20, 23};
+        for (int i = baseHours.length - 1; i >= 0; i--) {
+            if (hour >= baseHours[i]) return String.format("%02d00", baseHours[i]);
+        }
+        return "2300";
     }
 
     private String getClosestForecastTime(String nowTime) {
@@ -233,20 +340,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int[] convertGPS(double lat, double lon) {
-        double RE = 6371.00877, GRID = 5.0, SLAT1 = 30.0, SLAT2 = 60.0;
-        double OLON = 126.0, OLAT = 38.0, XO = 43, YO = 136;
-        double DEGRAD = Math.PI / 180.0, re = RE / GRID;
-        double slat1 = SLAT1 * DEGRAD, slat2 = SLAT2 * DEGRAD;
-        double olon = OLON * DEGRAD, olat = OLAT * DEGRAD;
+        double RE = 6371.00877, GRID = 5.0, SLAT1 = 30.0, SLAT2 = 60.0, OLON = 126.0, OLAT = 38.0, XO = 43, YO = 136;
+        double DEGRAD = Math.PI / 180.0;
+        double re = RE / GRID;
+        double slat1 = SLAT1 * DEGRAD, slat2 = SLAT2 * DEGRAD, olon = OLON * DEGRAD, olat = OLAT * DEGRAD;
+
         double sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) /
                 Math.log(Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5));
         double sf = Math.pow(Math.tan(Math.PI * 0.25 + slat1 * 0.5), sn) * Math.cos(slat1) / sn;
         double ro = re * sf / Math.pow(Math.tan(Math.PI * 0.25 + olat * 0.5), sn);
+
         double ra = re * sf / Math.pow(Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5), sn);
         double theta = lon * DEGRAD - olon;
         if (theta > Math.PI) theta -= 2.0 * Math.PI;
         if (theta < -Math.PI) theta += 2.0 * Math.PI;
         theta *= sn;
+
         int x = (int) (ra * Math.sin(theta) + XO + 0.5);
         int y = (int) (ro - ra * Math.cos(theta) + YO + 0.5);
         return new int[]{x, y};

@@ -5,59 +5,65 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHolder> {
 
-    private List<ClothingItem> items = new ArrayList<>();
+    private List<ClothingItem> clothingItems = new ArrayList<>();
 
-    public void setItems(List<ClothingItem> newItems) {
-        this.items = newItems;
+    public void setItems(List<ClothingItem> items) {
+        this.clothingItems = items;
         notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageViewClothing;
+        public TextView nameView, levelView;
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            imageViewClothing = itemView.findViewById(R.id.imageViewClothing);
+        public ViewHolder(View view) {
+            super(view);
+            nameView = view.findViewById(R.id.clothingName);
+            levelView = view.findViewById(R.id.clothingWarmth);
         }
     }
 
     @Override
-    public ClothingAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_clothing, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
         ClothingItem item = items.get(position);
-
-        Glide.with(holder.itemView.getContext())
-                .load(item.imageUri)
-                .placeholder(R.drawable.ic_launcher_background)
-                .into(holder.imageViewClothing);
-
-        holder.imageViewClothing.setOnClickListener(v -> {
-            Dialog dialog = new Dialog(v.getContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            View dialogView = LayoutInflater.from(v.getContext()).inflate(R.layout.dialog_image_preview, null);
-            ImageView preview = dialogView.findViewById(R.id.imageViewPreview);
-            Glide.with(v.getContext()).load(item.imageUri).into(preview);
-            dialog.setContentView(dialogView);
-            dialog.show();
-            preview.setOnClickListener(view -> dialog.dismiss());
-        });
+        holder.nameView.setText(item.name + " (" + item.category + ")");
+        holder.levelView.setText("warmthLevel: " + item.warmthLevel);
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return clothingItems.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView textViewName;
+        TextView textViewWarmth;
+        ImageView imageViewClothing;
+
+        ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            textViewName = itemView.findViewById(R.id.textViewName);
+            textViewWarmth = itemView.findViewById(R.id.textViewWarmth);
+            imageViewClothing = itemView.findViewById(R.id.imageViewClothing);
+        }
     }
 }
