@@ -27,8 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val visionApiKey: String = localProperties.getProperty("VISION_API_KEY", "\"\"")
-        buildConfigField("String", "VISION_API_KEY", visionApiKey)
+        val visionApiKey: String = localProperties.getProperty("VISION_API_KEY", "")
+        buildConfigField("String", "VISION_API_KEY", "\"$visionApiKey\"")
         buildFeatures {
             buildConfig = true
         }

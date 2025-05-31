@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Log;
 import androidx.annotation.WorkerThread;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -14,6 +15,7 @@ import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.OutputStream;
+import com.example.wearther.BuildConfig;
 
 public class VisionApiHelper {
     public interface MetaDataCallback {
@@ -22,6 +24,7 @@ public class VisionApiHelper {
 
     public static void extractMetaData(Context context, Bitmap bitmap, MetaDataCallback callback) {
         new Thread(() -> {
+            String resp = null; // try 바깥에 선언
             try {
                 // 1. Bitmap을 Base64로 변환
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -45,7 +48,7 @@ public class VisionApiHelper {
                 request.put("requests", requests);
 
                 // 3. Vision API 호출
-                URL url = new URL("https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY");
+                URL url = new URL("https://vision.googleapis.com/v1/images:annotate?key=" + BuildConfig.VISION_API_KEY);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -60,7 +63,7 @@ public class VisionApiHelper {
                 byte[] buf = new byte[1024];
                 int len;
                 while ((len = is.read(buf)) != -1) respBaos.write(buf, 0, len);
-                String resp = new String(respBaos.toByteArray(), "UTF-8");
+                resp = new String(respBaos.toByteArray(), "UTF-8");
                 JSONObject respJson = new JSONObject(resp);
                 JSONArray labels = respJson.getJSONArray("responses")
                         .getJSONObject(0)
@@ -77,6 +80,7 @@ public class VisionApiHelper {
 
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.d("VisionAPI", resp != null ? resp : "no response");
                 callback.onResult(null);
             }
         }).start();
