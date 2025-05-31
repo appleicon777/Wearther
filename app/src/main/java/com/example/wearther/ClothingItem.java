@@ -13,9 +13,9 @@ public class ClothingItem {
 
     public int warmthLevel;
     public boolean isLayerable;
-
+    public boolean isWaterproof;
     public String colorTag;
     public boolean isJean;
-
+    public boolean isThick;
     public String imageUri;
 }

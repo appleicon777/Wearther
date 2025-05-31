@@ -8,9 +8,8 @@ public class ActivityInfo {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
-    public long startTime;
-    public long endTime;
-
+    public int startHour;
+    public int endHour;
     public boolean isOutdoors;
     public boolean isPhysicallyActive;
 }

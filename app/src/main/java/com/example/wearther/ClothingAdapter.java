@@ -4,45 +4,50 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHolder> {
 
-    private List<ClothingItem> items = new ArrayList<>();
+    private List<ClothingItem> clothingItems = new ArrayList<>();
 
-    public void setItems(List<ClothingItem> newItems) {
-        this.items = newItems;
+    public void setItems(List<ClothingItem> items) {
+        this.clothingItems = items;
         notifyDataSetChanged();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView nameView, levelView;
-
-        public ViewHolder(View view) {
-            super(view);
-            nameView = view.findViewById(R.id.clothingName);
-            levelView = view.findViewById(R.id.clothingWarmth);
-        }
-    }
-
+    @NonNull
     @Override
-    public ClothingAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_clothing, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        ClothingItem item = items.get(position);
-        holder.nameView.setText(item.name + " (" + item.category + ")");
-        holder.levelView.setText("warmthLevel: " + item.warmthLevel);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        ClothingItem item = clothingItems.get(position);
+        holder.textViewName.setText(item.name);
+        holder.textViewWarmth.setText("Warmth Level: " + item.warmthLevel);
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return clothingItems.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView textViewName;
+        TextView textViewWarmth;
+
+        ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            textViewName = itemView.findViewById(R.id.textViewName);
+            textViewWarmth = itemView.findViewById(R.id.textViewWarmth);
+        }
     }
 }

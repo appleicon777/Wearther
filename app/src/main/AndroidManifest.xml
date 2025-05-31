@@ -24,6 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".RecommendationActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".FirebaseUIActivity" />
         <activity android:name=".GoogleSignInActivity" />

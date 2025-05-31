@@ -17,7 +17,7 @@ import androidx.room.RoomDatabase;
                 UserSetting.class,
                 WeatherInfo.class
         },
-        version = 1
+        version = 2
 )
 public abstract class AppDatabase extends RoomDatabase {
 
