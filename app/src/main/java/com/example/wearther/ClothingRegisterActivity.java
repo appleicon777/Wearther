@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -61,13 +62,20 @@ public class ClothingRegisterActivity extends AppCompatActivity {
     }
 
     private void openGallery() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_IMAGE_PICK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_IMAGES}, REQUEST_IMAGE_PICK);
+                return;
+            }
         } else {
-            Intent pickPhoto = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            pickPhoto.setType("image/*");
-            startActivityForResult(pickPhoto, REQUEST_IMAGE_PICK);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_IMAGE_PICK);
+                return;
+            }
         }
+        Intent pickPhoto = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickPhoto.setType("image/*");
+        startActivityForResult(pickPhoto, REQUEST_IMAGE_PICK);
     }
 
     @Override
@@ -160,17 +168,17 @@ public class ClothingRegisterActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+        if (requestCode == REQUEST_IMAGE_PICK) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openGallery();
+            } else {
+                Toast.makeText(this, "저장소(사진) 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openCamera();
             } else {
                 Toast.makeText(this, "카메라 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
-            }
-        } else if (requestCode == REQUEST_IMAGE_PICK) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openGallery();
-            } else {
-                Toast.makeText(this, "저장소 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -33,6 +33,7 @@
         <activity android:name=".FirebaseUIActivity" />
         <activity android:name=".GoogleSignInActivity" />
         <activity android:name=".RecommendationActivity" />
+        <activity android:name=".ClothingRegisterActivity" />
     </application>
 
 </manifest>
