@@ -34,6 +34,7 @@
         <activity android:name=".GoogleSignInActivity" />
         <activity android:name=".RecommendationActivity" />
         <activity android:name=".ClothingRegisterActivity" />
+        <activity android:name=".ClosetActivity" />
     </application>
 
 </manifest>

@@ -81,6 +81,7 @@ public class VisionApiHelper {
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.d("VisionAPI", resp != null ? resp : "no response");
+                Log.d("VisionAPI", "error: " + resp);
                 callback.onResult(null);
             }
         }).start();

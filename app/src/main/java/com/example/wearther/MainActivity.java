@@ -95,6 +95,12 @@ public class MainActivity extends AppCompatActivity {
 
         Button buttonRegisterClothing = findViewById(R.id.buttonRegisterClothing);
         buttonRegisterClothing.setOnClickListener(v -> showRegisterClothingDialog());
+
+        Button buttonCloset = findViewById(R.id.buttonCloset);
+        buttonCloset.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ClosetActivity.class);
+            startActivity(intent);
+        });
     }
 
     @Override
