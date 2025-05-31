@@ -1,10 +1,10 @@
 package com.example.wearther;
 
+import android.app.Dialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
@@ -22,13 +22,10 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHo
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageViewClothing;
-        TextView textViewName, levelView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             imageViewClothing = itemView.findViewById(R.id.imageViewClothing);
-            textViewName = itemView.findViewById(R.id.textViewName);
-            levelView = itemView.findViewById(R.id.clothingWarmth);
         }
     }
 
@@ -42,14 +39,21 @@ public class ClothingAdapter extends RecyclerView.Adapter<ClothingAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ClothingItem item = items.get(position);
-        holder.textViewName.setText(item.name + " (" + item.category + ")");
-        holder.levelView.setText("warmthLevel: " + item.warmthLevel);
 
-        // 이미지 표시
         Glide.with(holder.itemView.getContext())
                 .load(item.imageUri)
-                .placeholder(R.drawable.ic_launcher_background) // 기본 이미지
+                .placeholder(R.drawable.ic_launcher_background)
                 .into(holder.imageViewClothing);
+
+        holder.imageViewClothing.setOnClickListener(v -> {
+            Dialog dialog = new Dialog(v.getContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            View dialogView = LayoutInflater.from(v.getContext()).inflate(R.layout.dialog_image_preview, null);
+            ImageView preview = dialogView.findViewById(R.id.imageViewPreview);
+            Glide.with(v.getContext()).load(item.imageUri).into(preview);
+            dialog.setContentView(dialogView);
+            dialog.show();
+            preview.setOnClickListener(view -> dialog.dismiss());
+        });
     }
 
     @Override
