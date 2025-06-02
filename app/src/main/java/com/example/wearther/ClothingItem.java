@@ -18,4 +18,6 @@ public class ClothingItem {
     public boolean isJean;
     public boolean isThick;
     public String imageUri;
+    public String material;
+
 }

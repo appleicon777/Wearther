@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".RecommendFragment">
+
+    <!-- 날짜 선택 -->
+    <TextView
+        android:id="@+id/textViewDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="날짜 선택:"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Spinner
+        android:id="@+id/dateSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/date_options"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/textViewDate"
+        app:layout_constraintBottom_toBottomOf="@id/textViewDate"
+        android:layout_marginStart="8dp" />
+
+    <!-- 활동 시간 안내 텍스트 -->
+    <TextView
+        android:id="@+id/textViewTimeRange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="활동 시간: 9시 ~ 18시"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/textViewDate"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <!-- 활동 시간 슬라이더 -->
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/timeRangeSlider"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:valueFrom="0"
+        android:valueTo="23"
+        android:stepSize="1"
+        app:values="@array/default_time_range"
+        app:layout_constraintTop_toBottomOf="@id/textViewTimeRange"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <!-- 실외 활동 체크박스 -->
+    <CheckBox
+        android:id="@+id/checkbox_outdoor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="실외 활동 위주"
+        app:layout_constraintTop_toBottomOf="@id/timeRangeSlider"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <!-- 추천받기 버튼 -->
+    <Button
+        android:id="@+id/buttonRecommend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="추천받기"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_outdoor"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

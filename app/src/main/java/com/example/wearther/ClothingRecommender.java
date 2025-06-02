@@ -9,7 +9,7 @@ public class ClothingRecommender {
     public static List<ClothingItem> recommend(List<ClothingItem> allClothes, WeatherInfo weather, int startHour, int endHour) {
         List<ClothingItem> recommended = new ArrayList<>();
 
-        // 🌡️ 평균 기온 기준으로 필요한 warmthLevel 결정
+        // 평균 기온 기준으로 필요한 warmthLevel 결정
         double averageTemp = weather.temp;
         int requiredWarmth = calculateRequiredWarmth(averageTemp, weather.windSpeed, weather.isRaining, weather.isSnowing);
 

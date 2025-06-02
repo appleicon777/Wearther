@@ -17,8 +17,10 @@ public interface ClothingItemDao {
     void delete(ClothingItem item);
 
     @Query("SELECT * FROM ClothingItem")
-    List<ClothingItem> getAll();
+    List<ClothingItem> getAllItems();
 
     @Query("SELECT * FROM ClothingItem WHERE id = :id")
     ClothingItem getById(int id);
+
+
 }
