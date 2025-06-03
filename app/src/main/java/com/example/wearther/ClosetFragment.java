@@ -21,7 +21,7 @@ public class ClosetFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_closet, container, false);
 
         TextView textView = view.findViewById(R.id.text_closet);
-        textView.setText("옷장 화면입니다");
+        textView.setText("옷장 화면");
 
         return view;
     }

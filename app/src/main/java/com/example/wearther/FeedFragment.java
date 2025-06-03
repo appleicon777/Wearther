@@ -21,7 +21,7 @@ public class FeedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
 
         TextView textView = view.findViewById(R.id.text_feed);
-        textView.setText("피드 화면입니다");
+        textView.setText("피드 화면");
 
         return view;
     }
