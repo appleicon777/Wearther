@@ -1,72 +1,70 @@
 package com.example.wearther;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
-import androidx.annotation.Nullable;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RecommendationActivity extends AppCompatActivity {
 
     private TextView recommendationText;
-    private AppDatabase db;
+    private RecyclerView recommendationRecyclerView;
+    private RecommendationAdapter recommendationAdapter;
+    private String conditionKey = "";
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recommendation);
 
         recommendationText = findViewById(R.id.recommendationText);
+        recommendationRecyclerView = findViewById(R.id.recommendationRecyclerView);
 
-        // Intent 값 받기
-        int startHour = getIntent().getIntExtra("startHour", 9);
-        int endHour = getIntent().getIntExtra("endHour", 18);
-        boolean isOutdoor = getIntent().getBooleanExtra("isOutdoor", false);
-        boolean isRaining = getIntent().getBooleanExtra("isRaining", false);
-        boolean isSnowing = getIntent().getBooleanExtra("isSnowing", false);
-        int meanTemp = getIntent().getIntExtra("meanTemp", 15);
+        // 옷 추천 정보 표시
+        List<ClothingItem> recommendedItems = getIntent().getParcelableArrayListExtra("recommendedItems");
+        int minTemp = getIntent().getIntExtra("minTemp", 0);
+        int maxTemp = getIntent().getIntExtra("maxTemp", 0);
+        String weather = getIntent().getStringExtra("weather");
+        String activityTime = getIntent().getStringExtra("activityTime");
+        conditionKey = minTemp + ":" + maxTemp + ":" + weather + ":" + activityTime;
 
-        // 필요한 warmthLevel 계산
-        int targetWarmth = calculateTargetWarmth(meanTemp, startHour, endHour, isOutdoor);
-
-        db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "app-database").allowMainThreadQueries().build();
-
-        List<ClothingItem> allItems = db.clothingItemDao().getAllItems();
-        List<ClothingItem> filtered = new ArrayList<>();
-
-        for (ClothingItem item : allItems) {
-            if ((isRaining || isSnowing) && item.material != null && item.material.contains("cotton")) continue;
-            if (item.warmthLevel <= targetWarmth) filtered.add(item);
-        }
-
-        if (filtered.isEmpty()) {
-            recommendationText.setText("추천 가능한 옷이 없습니다 \uD83D\uDE25");
+        if (recommendedItems != null && !recommendedItems.isEmpty()) {
+            recommendationText.setText("추천된 옷 조합입니다:");
+            recommendationAdapter = new RecommendationAdapter(recommendedItems);
+            recommendationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recommendationRecyclerView.setAdapter(recommendationAdapter);
         } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("\uD83D\uDCA1 추천 옷 리스트 (필요 warmth: ").append(targetWarmth).append(")\n\n");
-            for (ClothingItem item : filtered) {
-                sb.append("- ").append(item.name)
-                        .append(" (warmth: ").append(item.warmthLevel).append(")\n");
-            }
-            recommendationText.setText(sb.toString());
+            recommendationText.setText("추천 가능한 옷이 없습니다.");
         }
+
+        // 피드백 버튼 설정
+        Button buttonTooCold = findViewById(R.id.buttonTooCold);
+        Button buttonJustRight = findViewById(R.id.buttonJustRight);
+        Button buttonTooHot = findViewById(R.id.buttonTooHot);
+
+        buttonTooCold.setOnClickListener(v -> saveFeedback("too_cold"));
+        buttonJustRight.setOnClickListener(v -> saveFeedback("just_right"));
+        buttonTooHot.setOnClickListener(v -> saveFeedback("too_hot"));
     }
 
-    private int calculateTargetWarmth(int temp, int startHour, int endHour, boolean isOutdoor) {
-        int warmth = 0;
-        if (temp <= 0) warmth = 9;
-        else if (temp <= 5) warmth = 8;
-        else if (temp <= 10) warmth = 7;
-        else if (temp <= 15) warmth = 5;
-        else if (temp <= 20) warmth = 3;
-        else warmth = 1;
+    private void saveFeedback(String result) {
+        new Thread(() -> {
+            Feedback feedback = new Feedback();
+            feedback.result = result;
+            feedback.date = System.currentTimeMillis();
+            feedback.adjusted = false;
+            feedback.conditionKey = conditionKey;
 
-        if (isOutdoor) warmth += 1;
-        if (endHour - startHour > 6) warmth += 1;
+            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+            db.feedbackDao().insert(feedback);
 
-        return Math.min(warmth, 10);
+            runOnUiThread(() ->
+                    Toast.makeText(RecommendationActivity.this, "피드백이 저장되었습니다.", Toast.LENGTH_SHORT).show());
+        }).start();
     }
-}
+} 

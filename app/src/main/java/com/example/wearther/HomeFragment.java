@@ -111,6 +111,10 @@ public class HomeFragment extends Fragment {
                             forecastMap.put(item.fcstTime, data);
                         }
 
+                        // ⬇️ ForecastStorage에 원본 날씨 데이터 저장
+                        ForecastStorage.items = items;
+                        Log.d("WeatherDebug", "ForecastStorage saved. Size: " + items.size());
+
                         List<ForecastItemData> forecastList = new ArrayList<>(forecastMap.values());
                         forecastList.sort((a, b) -> a.time.compareTo(b.time));
                         adapter.setItems(forecastList);
@@ -131,6 +135,8 @@ public class HomeFragment extends Fragment {
                 Log.e("WeatherDebug", "통신 오류", t);
             }
         });
+
+
     }
 
     private String getBaseTime() {

@@ -21,6 +21,7 @@ import com.example.wearther.tempMean;
 import com.google.android.material.slider.RangeSlider;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -61,8 +62,9 @@ public class RecommendFragment extends Fragment {
 
         buttonRecommend.setOnClickListener(v -> {
             if (forecastItems == null || forecastItems.isEmpty()) {
-                Log.e("Recommend", "예보 정보 없음");
-                return;
+                forecastItems = ForecastStorage.items;
+                if (forecastItems == null) forecastItems = new ArrayList<>();
+                Log.d("Recommend", "ForecastItems injected from ForecastStorage: " + (forecastItems != null ? forecastItems.size() : 0));
             }
 
             // 날짜 선택 처리

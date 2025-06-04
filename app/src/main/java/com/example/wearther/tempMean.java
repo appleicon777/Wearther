@@ -11,6 +11,8 @@ public class tempMean {
     }
 
     public static int getMeanTempByDate(List<WeatherResponse.ForecastItem> items, String date, int startHour, int endHour) {
+        if (items == null || items.isEmpty()) return 5;
+
         int sum = 0, count = 0;
         for (WeatherResponse.ForecastItem item : items) {
             if (!"TMP".equals(item.category)) continue;

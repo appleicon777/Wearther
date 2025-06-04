@@ -1,18 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="24dp">
 
-    <TextView
-        android:id="@+id/recommendationText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="추천 정보를 여기에 표시합니다"
-        android:textSize="18sp"
-        android:padding="8dp" />
+        android:orientation="vertical">
 
-    <!-- 추후 RecyclerView 등을 활용한 옷 추천 리스트 추가 가능 -->
+        <!-- 추천 설명 -->
+        <TextView
+            android:id="@+id/recommendationText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="추천 정보를 여기에 표시합니다"
+            android:textSize="18sp"
+            android:padding="8dp"
+            android:textStyle="bold" />
 
-</LinearLayout>
+        <!-- 추천 옷 조합 리스트 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recommendationRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" />
+
+        <!-- 피드백 질문 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="이 추천은 어땠나요?"
+            android:textSize="16sp"
+            android:layout_marginTop="24dp"
+            android:paddingBottom="8dp" />
+
+        <!-- 피드백 버튼들 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/buttonTooCold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="너무 추웠어요" />
+
+            <Button
+                android:id="@+id/buttonJustRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="적당했어요"
+                android:layout_marginStart="8dp" />
+
+            <Button
+                android:id="@+id/buttonTooHot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="너무 더웠어요"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
