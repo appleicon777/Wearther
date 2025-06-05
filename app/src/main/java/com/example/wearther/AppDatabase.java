@@ -1,7 +1,7 @@
+// AppDatabase.java
 package com.example.wearther;
 
 import android.content.Context;
-
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -31,10 +31,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract RecommendationLogDao recommendationLogDao();
     public abstract WeatherInfoDao weatherInfoDao();
     public abstract ActivityInfoDao activityInfoDao();
-
-    // tempMean이 Entity가 아니라 계산 전용 클래스라면 Dao는 존재하지 않음!
-    // 만약 tempMean이 DB에 저장되거나 Dao를 통해 조작된다면 아래 줄을 유지하세요.
-    // public abstract tempMeanDao tempMeanDao(); ← 필요 없다면 제거하세요.
 
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {

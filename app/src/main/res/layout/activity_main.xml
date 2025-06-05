@@ -1,97 +1,24 @@
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/main_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <!-- 날씨 결과 출력 -->
-    <TextView
-        android:id="@+id/textViewResult"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="날씨 결과 출력"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:background="#EEEEEE"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp" />
+    <!-- ViewPager2 for fragment screens -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation" />
 
-    <!-- 활동 시간 텍스트 -->
-    <TextView
-        android:id="@+id/textViewTimeRange"
-        android:layout_width="wrap_content"
+    <!-- BottomNavigationView at the bottom -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="활동 시간: 9시 ~ 18시"
-        android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@id/textViewResult"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="24dp" />
+        android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/bottom_nav_menu" />
 
-    <!-- 시간 선택 슬라이더 -->
-    <com.google.android.material.slider.RangeSlider
-        android:id="@+id/timeRangeSlider"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:valueFrom="0"
-        android:valueTo="23"
-        android:stepSize="1"
-        app:values="@array/default_time_range"
-        app:layout_constraintTop_toBottomOf="@id/textViewTimeRange"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp" />
-
-    <!-- 추천받기 버튼 -->
-    <Button
-        android:id="@+id/buttonRecommend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="추천받기"
-        app:layout_constraintTop_toBottomOf="@id/timeRangeSlider"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="24dp" />
-
-    <!-- 실외 활동 여부 -->
-    <CheckBox
-        android:id="@+id/checkbox_outdoor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="실외 활동 위주"
-        app:layout_constraintTop_toBottomOf="@id/buttonRecommend"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="24dp" />
-    <!-- 옷 등록 버튼 -->
-    <Button
-        android:id="@+id/buttonRegisterClothing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="옷 등록"
-        app:layout_constraintTop_toBottomOf="@id/buttonRecommend"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="24dp" />
-
-    <!-- 옷장 버튼 -->
-    <Button
-        android:id="@+id/buttonCloset"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="옷장"
-        app:layout_constraintTop_toBottomOf="@id/buttonRegisterClothing"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="24dp" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

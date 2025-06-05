@@ -1,102 +1,70 @@
 package com.example.wearther;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class RecommendationActivity extends AppCompatActivity {
 
-    private TextView textViewRecommendation;
-    private RecyclerView recyclerView;
-    private ClothingAdapter adapter;
+    private TextView recommendationText;
+    private RecyclerView recommendationRecyclerView;
+    private RecommendationAdapter recommendationAdapter;
+    private String conditionKey = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recommendation);
 
-        textViewRecommendation = findViewById(R.id.textViewRecommendation);
-        recyclerView = findViewById(R.id.recyclerView);
+        recommendationText = findViewById(R.id.recommendationText);
+        recommendationRecyclerView = findViewById(R.id.recommendationRecyclerView);
 
-        // RecyclerView 구성
-        adapter = new ClothingAdapter();
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // 옷 추천 정보 표시
+        List<ClothingItem> recommendedItems = getIntent().getParcelableArrayListExtra("recommendedItems");
+        int minTemp = getIntent().getIntExtra("minTemp", 0);
+        int maxTemp = getIntent().getIntExtra("maxTemp", 0);
+        String weather = getIntent().getStringExtra("weather");
+        String activityTime = getIntent().getStringExtra("activityTime");
+        conditionKey = minTemp + ":" + maxTemp + ":" + weather + ":" + activityTime;
 
-        // MainActivity로부터 전달받은 날씨 및 활동 정보
-        int meanTemp = getIntent().getIntExtra("meanTemp", 15);
-        int startHour = getIntent().getIntExtra("startHour", 9);
-        int endHour = getIntent().getIntExtra("endHour", 18);
-        boolean isRaining = getIntent().getBooleanExtra("isRaining", false);
-        boolean isSnowing = getIntent().getBooleanExtra("isSnowing", false);
-        boolean isOutdoor = getIntent().getBooleanExtra("isOutdoor", true);
-
-        // DB 연결
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "wearther-db")
-                .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
-                .build();
-
-        List<ClothingItem> clothes = db.clothingItemDao().getAll();
-
-        // 활동 및 날씨에 따른 목표 warmthLevel 설정
-        int targetWarmth = isOutdoor ?
-                (meanTemp <= 0 ? 9 : meanTemp <= 10 ? 7 : meanTemp <= 17 ? 5 : meanTemp <= 23 ? 3 : 1)
-                : (meanTemp <= 0 ? 7 : meanTemp <= 10 ? 5 : meanTemp <= 17 ? 3 : meanTemp <= 23 ? 2 : 0);
-
-        // 추천 리스트 생성
-        List<ClothingItem> recommended = new ArrayList<>();
-        List<Integer> recommendedIds = new ArrayList<>();
-
-        for (ClothingItem item : clothes) {
-            // AI 기반 등록 대비 방어 코드
-            if (item.warmthLevel <= 0) continue;
-            if (item.name == null || item.name.trim().isEmpty()) continue;
-
-            boolean suitable = false;
-
-            if ((isRaining && item.isWaterproof) || (isSnowing && item.isThick)) {
-                suitable = true;
-            } else if (Math.abs(item.warmthLevel - targetWarmth) <= 2) {
-                suitable = true;
-            }
-
-            if (suitable) {
-                recommended.add(item);
-                recommendedIds.add(item.id);
-            }
-        }
-
-        // 결과 출력 및 로그 기록
-        if (recommended.isEmpty()) {
-            textViewRecommendation.setText("적절한 옷이 없습니다. 옷장을 업데이트 해주세요.");
+        if (recommendedItems != null && !recommendedItems.isEmpty()) {
+            recommendationText.setText("추천된 옷 조합입니다:");
+            recommendationAdapter = new RecommendationAdapter(recommendedItems);
+            recommendationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recommendationRecyclerView.setAdapter(recommendationAdapter);
         } else {
-            textViewRecommendation.setText("추천된 옷 리스트:");
-            adapter.setItems(recommended);
-
-            // 추천 로그 저장
-            RecommendationLog log = new RecommendationLog();
-            log.timestamp = System.currentTimeMillis();
-            log.recommendedItemIds = joinIds(recommendedIds);
-            log.feedbackId = null;
-            db.recommendationLogDao().insert(log);
+            recommendationText.setText("추천 가능한 옷이 없습니다.");
         }
+
+        // 피드백 버튼 설정
+        Button buttonTooCold = findViewById(R.id.buttonTooCold);
+        Button buttonJustRight = findViewById(R.id.buttonJustRight);
+        Button buttonTooHot = findViewById(R.id.buttonTooHot);
+
+        buttonTooCold.setOnClickListener(v -> saveFeedback("too_cold"));
+        buttonJustRight.setOnClickListener(v -> saveFeedback("just_right"));
+        buttonTooHot.setOnClickListener(v -> saveFeedback("too_hot"));
     }
 
-    private String joinIds(List<Integer> ids) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < ids.size(); i++) {
-            sb.append(ids.get(i));
-            if (i < ids.size() - 1) sb.append(",");
-        }
-        return sb.toString();
+    private void saveFeedback(String result) {
+        new Thread(() -> {
+            Feedback feedback = new Feedback();
+            feedback.result = result;
+            feedback.date = System.currentTimeMillis();
+            feedback.adjusted = false;
+            feedback.conditionKey = conditionKey;
+
+            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+            db.feedbackDao().insert(feedback);
+
+            runOnUiThread(() ->
+                    Toast.makeText(RecommendationActivity.this, "피드백이 저장되었습니다.", Toast.LENGTH_SHORT).show());
+        }).start();
     }
-}
+} 

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="date_options">
+        <item>오늘</item>
+        <item>내일</item>
+    </string-array>
+
     <array name="default_time_range">
-        <item>8</item>
+        <item>9</item>
         <item>18</item>
     </array>
 </resources>
