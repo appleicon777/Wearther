@@ -2,7 +2,6 @@ package com.example.wearther;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -21,6 +20,9 @@ public class ClothingItem implements Parcelable {
     public boolean isThick;
     public String imageUri;
     public String material;
+    
+    // Firestore 문서 id 저장 (삭제 처리 시 필요)
+    public String documentId;
 
     // 기본 생성자
     public ClothingItem() {}
@@ -38,6 +40,7 @@ public class ClothingItem implements Parcelable {
         isThick = in.readByte() != 0;
         imageUri = in.readString();
         material = in.readString();
+        documentId = in.readString();
     }
 
     public static final Creator<ClothingItem> CREATOR = new Creator<ClothingItem>() {
@@ -70,5 +73,6 @@ public class ClothingItem implements Parcelable {
         dest.writeByte((byte) (isThick ? 1 : 0));
         dest.writeString(imageUri);
         dest.writeString(material);
+        dest.writeString(documentId);
     }
 }

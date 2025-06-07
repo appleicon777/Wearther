@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
@@ -19,6 +20,9 @@ import android.app.AlertDialog;
 public class ClosetFragment extends Fragment {
     private RecyclerView recyclerView;
     private ClothingAdapter adapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    // 추가: 옷 삭제 버튼
+    private View buttonDeleteClothing;
 
     @Nullable
     @Override
@@ -26,48 +30,22 @@ public class ClosetFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_closet, container, false);
 
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new ClothingAdapter();
         recyclerView.setAdapter(adapter);
 
-        // Firestore에서 옷 목록 불러오기
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("clothingItems")
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                ArrayList<ClothingItem> items = new ArrayList<>();
-                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    ClothingItem item = new ClothingItem();
-                    item.name = doc.getString("label");
-                    item.imageUri = doc.getString("imageUrl");
-                    // Firestore에 warmthLevel, category 등이 있다면 아래처럼 추가
-                    // item.warmthLevel = doc.getLong("warmthLevel") != null ? doc.getLong("warmthLevel").intValue() : 0;
-                    // item.category = doc.getString("category");
-                    items.add(item);
-                }
-                adapter.setItems(items);
-                if (items.isEmpty()) {
-                    Toast.makeText(getContext(), "등록된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
-                }
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            });
-
-        // 옷 등록 버튼 클릭 리스너 수정
+        // 옷 등록 버튼은 기존 코드와 동일함
         view.findViewById(R.id.buttonAddClothing).setOnClickListener(v -> {
-            // Context가 null이 아닌지 확인
-            if (getContext() != null) {
+            if(getContext()!=null){
                 new AlertDialog.Builder(getContext())
                     .setTitle("옷 등록 방법 선택")
                     .setItems(new CharSequence[]{"사진 촬영", "갤러리에서 선택"}, (dialog, which) -> {
                         Intent intent = new Intent(getContext(), ClothingRegisterActivity.class);
-                        if (which == 0) {
-                            // 사진 촬영
+                        if (which == 0) {  // 사진 촬영
                             intent.putExtra("mode", "camera");
-                        } else {
-                            // 갤러리에서 선택
+                        } else {           // 갤러리에서 선택
                             intent.putExtra("mode", "gallery");
                         }
                         startActivity(intent);
@@ -79,6 +57,82 @@ public class ClosetFragment extends Fragment {
             }
         });
 
+        // 옷 삭제 버튼 클릭 리스너 추가
+        buttonDeleteClothing = view.findViewById(R.id.buttonDeleteClothing);
+        buttonDeleteClothing.setOnClickListener(v -> {
+            if (!adapter.isSelectionMode()) {
+                // 선택 모드 활성화
+                adapter.setSelectionMode(true);
+                Toast.makeText(getContext(), "삭제할 옷을 선택한 후 다시 '옷 삭제' 버튼을 누르세요.", Toast.LENGTH_SHORT).show();
+            } else {
+                // 이미 선택 모드인 경우, 선택된 옷 삭제 진행
+                ArrayList<ClothingItem> selected = new ArrayList<>(adapter.getSelectedItems());
+                if (selected.isEmpty()) {
+                    // 선택이 없으면 선택 모드 해제
+                    adapter.setSelectionMode(false);
+                    Toast.makeText(getContext(), "선택된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
+                } else {
+                    // 삭제 확인 다이얼로그
+                    new AlertDialog.Builder(getContext())
+                        .setTitle("삭제 확인")
+                        .setMessage("선택한 옷을 삭제할까요?")
+                        .setPositiveButton("삭제", (dialog, which) -> {
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            for (ClothingItem item : selected) {
+                                if (item.documentId != null) {
+                                    db.collection("clothingItems").document(item.documentId)
+                                      .delete();
+                                }
+                            }
+                            Toast.makeText(getContext(), "선택한 옷이 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                            // 삭제 후 새로고침
+                            refreshClothingData();
+                        })
+                        .setNegativeButton("취소", (dialog, which) -> {
+                            // 선택 모드 해제
+                            adapter.setSelectionMode(false);
+                        })
+                        .show();
+                }
+            }
+        });
+
+        // 초기 데이터 로드
+        refreshClothingData();
+
+        // 새로고침 리스너
+        swipeRefreshLayout.setOnRefreshListener(() -> refreshClothingData());
+
         return view;
+    }
+
+    private void refreshClothingData() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("clothingItems")
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                ArrayList<ClothingItem> items = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    ClothingItem item = new ClothingItem();
+                    item.name = doc.getString("label");
+                    item.imageUri = doc.getString("imageUrl");
+                    // 추가 정보: warmthLevel, category 등 Firestore에 저장한 경우 아래와 같이 처리할 수 있습니다.
+                    Long warmth = doc.getLong("warmthLevel");
+                    item.warmthLevel = warmth != null ? warmth.intValue() : 0;
+                    item.category = doc.getString("category");
+                    // Firestore 문서 id를 저장하여 이후 삭제에 사용
+                    item.documentId = doc.getId();
+                    items.add(item);
+                }
+                adapter.setItems(items);
+                if (items.isEmpty()) {
+                    Toast.makeText(getContext(), "등록된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
+                }
+                swipeRefreshLayout.setRefreshing(false);
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+            });
     }
 }
