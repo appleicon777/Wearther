@@ -151,15 +151,20 @@ public class ClothingRegisterActivity extends AppCompatActivity {
                 clothing.put("label", label);
                 clothing.put("imageUrl", uri.toString());
                 clothing.put("createdAt", System.currentTimeMillis());
-                clothing.put("category", category);         // 상의/하의 정보
-                clothing.put("warmthLevel", warmthLevel);     // 따뜻함 레벨
+                clothing.put("warmthLevel", warmthLevel);
+                clothing.put("category", category);
+                // 현재 로그인 사용자의 UID 추가
+                String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
+                clothing.put("userId", currentUserId);
 
-                db.collection("clothingItems").add(clothing)
-                    .addOnSuccessListener(documentReference -> {
-                        Toast.makeText(this, "옷이 등록되었습니다!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(this, "DB 저장 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                db.collection("clothingItems")
+                  .add(clothing)
+                  .addOnSuccessListener(documentReference -> {
+                      Toast.makeText(this, "옷이 등록되었습니다.", Toast.LENGTH_SHORT).show();
+                      finish(); // 등록 완료 후 자동으로 옷장 화면으로 이동
+                  })
+                  .addOnFailureListener(e ->
+                      Toast.makeText(this, "옷 등록 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }))
             .addOnFailureListener(e -> Toast.makeText(this, "이미지 업로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }

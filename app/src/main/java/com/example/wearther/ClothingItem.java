@@ -23,6 +23,9 @@ public class ClothingItem implements Parcelable {
     
     // Firestore 문서 id 저장 (삭제 처리 시 필요)
     public String documentId;
+    
+    // 사용자 구분을 위한 필드 (추가)
+    public String userId; // 예: Firebase UID
 
     // 기본 생성자
     public ClothingItem() {}
@@ -41,6 +44,7 @@ public class ClothingItem implements Parcelable {
         imageUri = in.readString();
         material = in.readString();
         documentId = in.readString();
+        userId = in.readString();
     }
 
     public static final Creator<ClothingItem> CREATOR = new Creator<ClothingItem>() {
@@ -74,5 +78,6 @@ public class ClothingItem implements Parcelable {
         dest.writeString(imageUri);
         dest.writeString(material);
         dest.writeString(documentId);
+        dest.writeString(userId);
     }
 }

@@ -108,31 +108,33 @@ public class ClosetFragment extends Fragment {
 
     private void refreshClothingData() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // [수정] 현재 로그인 사용자의 UID로 필터링
+        String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
         db.collection("clothingItems")
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                ArrayList<ClothingItem> items = new ArrayList<>();
-                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    ClothingItem item = new ClothingItem();
-                    item.name = doc.getString("label");
-                    item.imageUri = doc.getString("imageUrl");
-                    // 추가 정보: warmthLevel, category 등 Firestore에 저장한 경우 아래와 같이 처리할 수 있습니다.
-                    Long warmth = doc.getLong("warmthLevel");
-                    item.warmthLevel = warmth != null ? warmth.intValue() : 0;
-                    item.category = doc.getString("category");
-                    // Firestore 문서 id를 저장하여 이후 삭제에 사용
-                    item.documentId = doc.getId();
-                    items.add(item);
-                }
-                adapter.setItems(items);
-                if (items.isEmpty()) {
-                    Toast.makeText(getContext(), "등록된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
-                }
-                swipeRefreshLayout.setRefreshing(false);
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                swipeRefreshLayout.setRefreshing(false);
-            });
+          .whereEqualTo("userId", currentUserId)
+          .get()
+          .addOnSuccessListener(queryDocumentSnapshots -> {
+              ArrayList<ClothingItem> items = new ArrayList<>();
+              for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                  ClothingItem item = new ClothingItem();
+                  item.name = doc.getString("label");
+                  item.imageUri = doc.getString("imageUrl");
+                  Long warmth = doc.getLong("warmthLevel");
+                  item.warmthLevel = warmth != null ? warmth.intValue() : 0;
+                  item.category = doc.getString("category");
+                  // Firestore 문서 id 저장 (삭제 등 처리 시 필요)
+                  item.documentId = doc.getId();
+                  items.add(item);
+              }
+              adapter.setItems(items);
+              if (items.isEmpty()) {
+                  Toast.makeText(getContext(), "등록된 옷이 없습니다.", Toast.LENGTH_SHORT).show();
+              }
+              swipeRefreshLayout.setRefreshing(false);
+          })
+          .addOnFailureListener(e -> {
+              Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+              swipeRefreshLayout.setRefreshing(false);
+          });
     }
 }

@@ -17,7 +17,7 @@ import androidx.room.RoomDatabase;
                 UserSetting.class,
                 WeatherInfo.class
         },
-        version = 3,  // 버전을 3으로 증가
+        version = 4,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
