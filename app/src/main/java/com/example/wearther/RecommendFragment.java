@@ -74,28 +74,31 @@ public class RecommendFragment extends Fragment {
                         ClothingItem item = new ClothingItem();
                         item.name = doc.getString("label");
                         item.imageUri = doc.getString("imageUrl");
-                        // Firestore에 warmthLevel, category 등이 있다면 아래처럼 추가
-                        // item.warmthLevel = doc.getLong("warmthLevel") != null ? doc.getLong("warmthLevel").intValue() : 0;
-                        // item.category = doc.getString("category");
+                        // 추가된 필드들: warmthLevel, category 등
+                        if (doc.contains("warmthLevel") && doc.getLong("warmthLevel") != null) {
+                            item.warmthLevel = doc.getLong("warmthLevel").intValue();
+                        }
+                        item.category = doc.getString("category");
+                        // 필요한 다른 필드들도 여기에 추가
                         allClothes.add(item);
                     }
-
+                    
                     if (forecastItems == null || forecastItems.isEmpty()) {
                         forecastItems = ForecastStorage.items;
                         if (forecastItems == null) forecastItems = new ArrayList<>();
                         Log.d("Recommend", "ForecastItems injected from ForecastStorage: " + (forecastItems != null ? forecastItems.size() : 0));
                     }
-
+        
                     // 날짜 선택 처리
                     String selectedDate = getSelectedDate(dateSpinner.getSelectedItemPosition());
-
+        
                     // 시간 범위 처리
                     int startHour = Math.round(timeRangeSlider.getValues().get(0));
                     int endHour = Math.round(timeRangeSlider.getValues().get(1));
-
+        
                     // 해당 날짜와 시간에 맞는 평균 기온 계산
                     int meanTemp = tempMean.getMeanTempByDate(forecastItems, selectedDate, startHour, endHour);
-
+        
                     // 강수 여부 파악
                     boolean isRaining = false, isSnowing = false;
                     for (WeatherResponse.ForecastItem item : forecastItems) {
@@ -110,19 +113,19 @@ public class RecommendFragment extends Fragment {
                             }
                         }
                     }
-
+        
                     boolean isOutdoor = checkBoxOutdoor.isChecked();
-
+        
                     // WeatherInfo 객체 생성 (임시)
                     WeatherInfo weatherInfo = new WeatherInfo();
                     weatherInfo.temp = meanTemp;
                     weatherInfo.windSpeed = 0; // 예시 값
                     weatherInfo.isRaining = isRaining;
                     weatherInfo.isSnowing = isSnowing;
-
+        
                     // 옷 추천
                     List<ClothingItem> recommendedItems = ClothingRecommender.recommend(allClothes, weatherInfo, startHour, endHour);
-
+        
                     // 추천 화면으로 이동
                     Intent intent = new Intent(getActivity(), RecommendationActivity.class);
                     intent.putParcelableArrayListExtra("recommendedItems", new ArrayList<>(recommendedItems));
@@ -130,7 +133,7 @@ public class RecommendFragment extends Fragment {
                     intent.putExtra("maxTemp", meanTemp); // 임시
                     intent.putExtra("weather", isRaining ? "비" : (isSnowing ? "눈" : "맑음"));
                     intent.putExtra("activityTime", startHour + "시 ~ " + endHour + "시");
-
+        
                     getActivity().runOnUiThread(() -> startActivity(intent));
                 })
                 .addOnFailureListener(e -> {

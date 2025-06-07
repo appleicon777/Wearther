@@ -4,9 +4,13 @@ package com.example.wearther;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+
 import java.util.List;
 
 public class RecommendationAdapter extends RecyclerView.Adapter<RecommendationAdapter.ViewHolder> {
@@ -19,14 +23,18 @@ public class RecommendationAdapter extends RecyclerView.Adapter<RecommendationAd
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+    public RecommendationAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_recommendation, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.textView.setText(items.get(position).name + " (warmth: " + items.get(position).warmthLevel + ")");
+    public void onBindViewHolder(@NonNull RecommendationAdapter.ViewHolder holder, int position) {
+        ClothingItem item = items.get(position);
+        Glide.with(holder.imageRecommendation.getContext())
+                .load(item.imageUri)
+                .into(holder.imageRecommendation);
     }
 
     @Override
@@ -35,11 +43,11 @@ public class RecommendationAdapter extends RecyclerView.Adapter<RecommendationAd
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        ImageView imageRecommendation;
 
         public ViewHolder(View view) {
             super(view);
-            textView = view.findViewById(android.R.id.text1);
+            imageRecommendation = view.findViewById(R.id.imageRecommendation);
         }
     }
 }

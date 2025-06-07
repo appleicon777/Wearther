@@ -17,11 +17,12 @@ import androidx.room.RoomDatabase;
                 UserSetting.class,
                 WeatherInfo.class
         },
-        version = 2
+        version = 3,  // 버전을 3으로 증가
+        exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
-    private static AppDatabase INSTANCE;
+    private static volatile AppDatabase INSTANCE;
 
     public abstract UserDao userDao();
     public abstract UserSettingDao userSettingsDao();
@@ -34,11 +35,16 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
-            INSTANCE = Room.databaseBuilder(
-                    context.getApplicationContext(),
-                    AppDatabase.class,
-                    "wearther-db"
-            ).fallbackToDestructiveMigration().build();
+            synchronized (AppDatabase.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = Room.databaseBuilder(
+                            context.getApplicationContext(),
+                            AppDatabase.class,
+                            "wearther-db"
+                    ).fallbackToDestructiveMigration()
+                     .build();
+                }
+            }
         }
         return INSTANCE;
     }

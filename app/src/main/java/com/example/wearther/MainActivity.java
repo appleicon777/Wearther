@@ -7,7 +7,6 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.wearther.HomeFragment;
 import com.example.wearther.ClosetFragment;
 import com.example.wearther.RecommendFragment;
-import com.example.wearther.FeedFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -32,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
+                // 하단 메뉴에서 해당 아이템 선택 처리
                 bottomNavigationView.getMenu().getItem(position).setChecked(true);
             }
         });
@@ -44,11 +44,8 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_closet) {
                 viewPager.setCurrentItem(1);
                 return true;
-            } else if (itemId == R.id.nav_feed) {
-                viewPager.setCurrentItem(2);
-                return true;
             } else if (itemId == R.id.nav_recommend) {
-                viewPager.setCurrentItem(3);
+                viewPager.setCurrentItem(2);
                 return true;
             }
             return false;
@@ -63,14 +60,13 @@ public class MainActivity extends AppCompatActivity {
         @NonNull
         @Override
         public Fragment createFragment(int position) {
+            // 인덱스 0: 홈, 1: 옷장, 2: 추천
             switch (position) {
                 case 0:
                     return new HomeFragment();
                 case 1:
                     return new ClosetFragment();
                 case 2:
-                    return new FeedFragment();
-                case 3:
                     return new RecommendFragment();
                 default:
                     return new HomeFragment();
@@ -79,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return 4;
+            return 3;
         }
     }
 }
