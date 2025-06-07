@@ -5,28 +5,41 @@ import java.util.List;
 
 public class ClothingRecommender {
 
-    // 추천 메서드: 전체 옷 리스트, 날씨, 활동 시작/끝 시간 입력
+    // 전체 옷 리스트, 날씨 정보, 활동 시작/끝 시간 입력
+    // 추천 결과: 상의 1벌과 하의 1벌 (해당 조건이 없으면 해당 카테고리 항목은 추천하지 않음)
     public static List<ClothingItem> recommend(List<ClothingItem> allClothes, WeatherInfo weather, int startHour, int endHour) {
         List<ClothingItem> recommended = new ArrayList<>();
 
-        // 평균 기온 기준으로 필요한 warmthLevel 결정
+        // 평균 기온과 기타 조건에 따른 필요 warmthLevel 계산
         double averageTemp = weather.temp;
         int requiredWarmth = calculateRequiredWarmth(averageTemp, weather.windSpeed, weather.isRaining, weather.isSnowing);
 
-        // 옷 추천 기준: warmthLevel이 비슷하거나 약간 높은 옷들 선택
+        ClothingItem recommendedTop = null;
+        ClothingItem recommendedBottom = null;
+
+        // 충분히 따뜻함 조건에 맞고, 카테고리를 고려하여 첫 상의와 첫 하의를 선택
         for (ClothingItem item : allClothes) {
-            if (item.warmthLevel >= requiredWarmth && item.warmthLevel <= requiredWarmth + 2) {
-                recommended.add(item);
+            if (item.warmthLevel >= requiredWarmth && item.warmthLevel <= requiredWarmth + 2 && item.category != null) {
+                if ("상의".equals(item.category) && recommendedTop == null) {
+                    recommendedTop = item;
+                } else if ("하의".equals(item.category) && recommendedBottom == null) {
+                    recommendedBottom = item;
+                }
             }
+        }
+
+        if (recommendedTop != null) {
+            recommended.add(recommendedTop);
+        }
+        if (recommendedBottom != null) {
+            recommended.add(recommendedBottom);
         }
 
         return recommended;
     }
 
-    // 날씨 조건에 따른 warmthLevel 계산 로직
     private static int calculateRequiredWarmth(double temp, double wind, boolean isRaining, boolean isSnowing) {
         int level;
-
         if (temp >= 25) {
             level = 1;  // 매우 더움
         } else if (temp >= 20) {

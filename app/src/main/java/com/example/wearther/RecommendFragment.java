@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +20,8 @@ import com.example.wearther.WeatherResponse;
 import com.example.wearther.WeatherService;
 import com.example.wearther.tempMean;
 import com.google.android.material.slider.RangeSlider;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -61,49 +64,79 @@ public class RecommendFragment extends Fragment {
         });
 
         buttonRecommend.setOnClickListener(v -> {
-            if (forecastItems == null || forecastItems.isEmpty()) {
-                forecastItems = ForecastStorage.items;
-                if (forecastItems == null) forecastItems = new ArrayList<>();
-                Log.d("Recommend", "ForecastItems injected from ForecastStorage: " + (forecastItems != null ? forecastItems.size() : 0));
-            }
-
-            // 날짜 선택 처리
-            String selectedDate = getSelectedDate(dateSpinner.getSelectedItemPosition());
-
-            // 시간 범위 처리
-            int startHour = Math.round(timeRangeSlider.getValues().get(0));
-            int endHour = Math.round(timeRangeSlider.getValues().get(1));
-
-            // 해당 날짜와 시간에 맞는 평균 기온 계산
-            int meanTemp = tempMean.getMeanTempByDate(forecastItems, selectedDate, startHour, endHour);
-
-            // 강수 여부 파악
-            boolean isRaining = false, isSnowing = false;
-            for (WeatherResponse.ForecastItem item : forecastItems) {
-                if (!item.fcstDate.equals(selectedDate)) continue;
-                if ("PTY".equals(item.category)) {
-                    if ("1".equals(item.fcstValue) || "4".equals(item.fcstValue)) isRaining = true;
-                    if ("3".equals(item.fcstValue)) isSnowing = true;
-                    if ("2".equals(item.fcstValue)) {
-                        int temp = getTempAtTime(selectedDate, item.fcstTime);
-                        if (temp < 4) isSnowing = true;
-                        else isRaining = true;
+            // Firestore에서 옷 목록 불러오기
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("clothingItems")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<ClothingItem> allClothes = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        ClothingItem item = new ClothingItem();
+                        item.name = doc.getString("label");
+                        item.imageUri = doc.getString("imageUrl");
+                        // Firestore에 warmthLevel, category 등이 있다면 아래처럼 추가
+                        // item.warmthLevel = doc.getLong("warmthLevel") != null ? doc.getLong("warmthLevel").intValue() : 0;
+                        // item.category = doc.getString("category");
+                        allClothes.add(item);
                     }
-                }
-            }
 
-            boolean isOutdoor = checkBoxOutdoor.isChecked();
+                    if (forecastItems == null || forecastItems.isEmpty()) {
+                        forecastItems = ForecastStorage.items;
+                        if (forecastItems == null) forecastItems = new ArrayList<>();
+                        Log.d("Recommend", "ForecastItems injected from ForecastStorage: " + (forecastItems != null ? forecastItems.size() : 0));
+                    }
 
-            // 추천 화면으로 이동
-            Intent intent = new Intent(getActivity(), RecommendationActivity.class);
-            intent.putExtra("meanTemp", meanTemp);
-            intent.putExtra("startHour", startHour);
-            intent.putExtra("endHour", endHour);
-            intent.putExtra("isRaining", isRaining);
-            intent.putExtra("isSnowing", isSnowing);
-            intent.putExtra("isOutdoor", isOutdoor);
-            intent.putExtra("selectedDate", selectedDate);
-            startActivity(intent);
+                    // 날짜 선택 처리
+                    String selectedDate = getSelectedDate(dateSpinner.getSelectedItemPosition());
+
+                    // 시간 범위 처리
+                    int startHour = Math.round(timeRangeSlider.getValues().get(0));
+                    int endHour = Math.round(timeRangeSlider.getValues().get(1));
+
+                    // 해당 날짜와 시간에 맞는 평균 기온 계산
+                    int meanTemp = tempMean.getMeanTempByDate(forecastItems, selectedDate, startHour, endHour);
+
+                    // 강수 여부 파악
+                    boolean isRaining = false, isSnowing = false;
+                    for (WeatherResponse.ForecastItem item : forecastItems) {
+                        if (!item.fcstDate.equals(selectedDate)) continue;
+                        if ("PTY".equals(item.category)) {
+                            if ("1".equals(item.fcstValue) || "4".equals(item.fcstValue)) isRaining = true;
+                            if ("3".equals(item.fcstValue)) isSnowing = true;
+                            if ("2".equals(item.fcstValue)) {
+                                int temp = getTempAtTime(selectedDate, item.fcstTime);
+                                if (temp < 4) isSnowing = true;
+                                else isRaining = true;
+                            }
+                        }
+                    }
+
+                    boolean isOutdoor = checkBoxOutdoor.isChecked();
+
+                    // WeatherInfo 객체 생성 (임시)
+                    WeatherInfo weatherInfo = new WeatherInfo();
+                    weatherInfo.temp = meanTemp;
+                    weatherInfo.windSpeed = 0; // 예시 값
+                    weatherInfo.isRaining = isRaining;
+                    weatherInfo.isSnowing = isSnowing;
+
+                    // 옷 추천
+                    List<ClothingItem> recommendedItems = ClothingRecommender.recommend(allClothes, weatherInfo, startHour, endHour);
+
+                    // 추천 화면으로 이동
+                    Intent intent = new Intent(getActivity(), RecommendationActivity.class);
+                    intent.putParcelableArrayListExtra("recommendedItems", new ArrayList<>(recommendedItems));
+                    intent.putExtra("minTemp", meanTemp);
+                    intent.putExtra("maxTemp", meanTemp); // 임시
+                    intent.putExtra("weather", isRaining ? "비" : (isSnowing ? "눈" : "맑음"));
+                    intent.putExtra("activityTime", startHour + "시 ~ " + endHour + "시");
+
+                    getActivity().runOnUiThread(() -> startActivity(intent));
+                })
+                .addOnFailureListener(e -> {
+                    getActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                });
         });
 
         return view;

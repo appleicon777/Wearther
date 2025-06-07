@@ -24,6 +24,7 @@ public class RecommendationActivity extends AppCompatActivity {
 
         recommendationText = findViewById(R.id.recommendationText);
         recommendationRecyclerView = findViewById(R.id.recommendationRecyclerView);
+        recommendationRecyclerView.setLayoutManager(new LinearLayoutManager(this)); // 레이아웃 매니저 먼저 설정
 
         // 옷 추천 정보 표시
         List<ClothingItem> recommendedItems = getIntent().getParcelableArrayListExtra("recommendedItems");
@@ -36,8 +37,7 @@ public class RecommendationActivity extends AppCompatActivity {
         if (recommendedItems != null && !recommendedItems.isEmpty()) {
             recommendationText.setText("추천된 옷 조합입니다:");
             recommendationAdapter = new RecommendationAdapter(recommendedItems);
-            recommendationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recommendationRecyclerView.setAdapter(recommendationAdapter);
+            recommendationRecyclerView.setAdapter(recommendationAdapter); // 어댑터 설정
         } else {
             recommendationText.setText("추천 가능한 옷이 없습니다.");
         }
@@ -67,4 +67,4 @@ public class RecommendationActivity extends AppCompatActivity {
                     Toast.makeText(RecommendationActivity.this, "피드백이 저장되었습니다.", Toast.LENGTH_SHORT).show());
         }).start();
     }
-} 
+}

@@ -9,4 +9,9 @@
         <item>9</item>
         <item>18</item>
     </array>
+
+    <string-array name="clothing_categories">
+        <item>상의</item>
+        <item>하의</item>
+    </string-array>
 </resources>

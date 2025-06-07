@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
+import android.app.AlertDialog;
 
 public class ClosetFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -54,12 +55,25 @@ public class ClosetFragment extends Fragment {
                 Toast.makeText(getContext(), "옷 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
 
-        // 옷 등록 버튼 클릭 리스너 추가
+        // 옷 등록 버튼 클릭 리스너 수정
         view.findViewById(R.id.buttonAddClothing).setOnClickListener(v -> {
             // Context가 null이 아닌지 확인
             if (getContext() != null) {
-                Intent intent = new Intent(getContext(), ClothingRegisterActivity.class);
-                startActivity(intent);
+                new AlertDialog.Builder(getContext())
+                    .setTitle("옷 등록 방법 선택")
+                    .setItems(new CharSequence[]{"사진 촬영", "갤러리에서 선택"}, (dialog, which) -> {
+                        Intent intent = new Intent(getContext(), ClothingRegisterActivity.class);
+                        if (which == 0) {
+                            // 사진 촬영
+                            intent.putExtra("mode", "camera");
+                        } else {
+                            // 갤러리에서 선택
+                            intent.putExtra("mode", "gallery");
+                        }
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("취소", null)
+                    .show();
             } else {
                 Toast.makeText(getActivity(), "Fragment가 Activity에 연결되지 않았습니다.", Toast.LENGTH_SHORT).show();
             }

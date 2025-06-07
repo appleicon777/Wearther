@@ -10,9 +10,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,7 +30,6 @@ import android.app.AlertDialog;
 public class ClothingRegisterActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_IMAGE_PICK = 2;
-
     private ImageView imageViewPreview;
     private Uri imageUri;
     private String mode; // "camera" 또는 "gallery"
@@ -41,15 +41,12 @@ public class ClothingRegisterActivity extends AppCompatActivity {
 
         imageViewPreview = findViewById(R.id.imageViewPreview);
 
-        // 다이얼로그에서 mode를 전달받았다면 처리
         mode = getIntent().getStringExtra("mode");
         if ("camera".equals(mode)) {
             openCamera();
         } else if ("gallery".equals(mode)) {
             openGallery();
         }
-
-        // 필요하다면 이후 Vision API 호출, 메타데이터 확인/수정, 저장 버튼 등 추가
     }
 
     private void openCamera() {
@@ -62,7 +59,7 @@ public class ClothingRegisterActivity extends AppCompatActivity {
     }
 
     private void openGallery() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_IMAGES}, REQUEST_IMAGE_PICK);
                 return;
@@ -85,31 +82,20 @@ public class ClothingRegisterActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap photo = (Bitmap) data.getExtras().get("data");
                 imageViewPreview.setImageBitmap(photo);
-                VisionApiHelper.extractMetaData(this, photo, metaData -> {
-                    runOnUiThread(() -> {
-                        if (metaData != null) {
-                            showMetaDataEditDialog(metaData.get("label"), photo);
-                        } else {
-                            Toast.makeText(this, "이미지 분석 실패", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                });
+                // Vision API를 호출하고 결과에 따른 라벨을 받아 다이얼로그 표시
+                VisionApiHelper.extractMetaData(this, photo, metaData -> runOnUiThread(() -> {
+                    String label = metaData != null ? metaData.get("label") : "";
+                    showMetaDataEditDialog(label, photo);
+                }));
             } else if (requestCode == REQUEST_IMAGE_PICK) {
                 imageUri = data.getData();
                 imageViewPreview.setImageURI(imageUri);
-
-                // 여기서 Bitmap으로 변환 후 Vision API 호출
                 try {
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-                    VisionApiHelper.extractMetaData(this, bitmap, metaData -> {
-                        runOnUiThread(() -> {
-                            if (metaData != null) {
-                                showMetaDataEditDialog(metaData.get("label"), bitmap);
-                            } else {
-                                Toast.makeText(this, "이미지 분석 실패", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    });
+                    VisionApiHelper.extractMetaData(this, bitmap, metaData -> runOnUiThread(() -> {
+                        String label = metaData != null ? metaData.get("label") : "";
+                        showMetaDataEditDialog(label, bitmap);
+                    }));
                 } catch (Exception e) {
                     e.printStackTrace();
                     Toast.makeText(this, "이미지 처리 오류", Toast.LENGTH_SHORT).show();
@@ -120,25 +106,37 @@ public class ClothingRegisterActivity extends AppCompatActivity {
         }
     }
 
-    // 다이얼로그 함수 추가
     private void showMetaDataEditDialog(String label, Bitmap photo) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_metadata, null);
         EditText editTextLabel = dialogView.findViewById(R.id.editTextLabel);
         editTextLabel.setText(label);
+
+        Spinner categorySpinner = dialogView.findViewById(R.id.categorySpinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.clothing_categories,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(adapter);
+
+        EditText editTextWarmth = dialogView.findViewById(R.id.editTextWarmth);
 
         new AlertDialog.Builder(this)
             .setTitle("옷 정보 확인")
             .setView(dialogView)
             .setPositiveButton("저장", (dialog, which) -> {
                 String finalLabel = editTextLabel.getText().toString().trim();
-                saveClothingToFirebase(finalLabel, photo);
+                String selectedCategory = categorySpinner.getSelectedItem().toString();
+                String warmthStr = editTextWarmth.getText().toString().trim();
+                int warmthLevel = warmthStr.isEmpty() ? 0 : Integer.parseInt(warmthStr);
+                saveClothingToFirebase(finalLabel, selectedCategory, warmthLevel, photo);
             })
             .setNegativeButton("취소", null)
             .show();
     }
 
-    private void saveClothingToFirebase(String label, Bitmap photo) {
-        // 1. 이미지 Firebase Storage에 업로드
+    private void saveClothingToFirebase(String label, String category, int warmthLevel, Bitmap photo) {
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference().child("clothes/" + System.currentTimeMillis() + ".jpg");
 
@@ -148,12 +146,13 @@ public class ClothingRegisterActivity extends AppCompatActivity {
 
         storageRef.putBytes(data)
             .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                // 2. Firestore에 메타데이터 저장
                 FirebaseFirestore db = FirebaseFirestore.getInstance();
                 Map<String, Object> clothing = new HashMap<>();
                 clothing.put("label", label);
                 clothing.put("imageUrl", uri.toString());
                 clothing.put("createdAt", System.currentTimeMillis());
+                clothing.put("category", category);         // 상의/하의 정보
+                clothing.put("warmthLevel", warmthLevel);     // 따뜻함 레벨
 
                 db.collection("clothingItems").add(clothing)
                     .addOnSuccessListener(documentReference -> {
