@@ -6,16 +6,24 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="옷 이름"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp"/>
     <EditText
         android:id="@+id/editTextLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="옷 이름" />
+        android:hint="예: 청바지" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="옷 종류를 선택하세요 (상의/하의):" />
+        android:text="옷 종류를 선택하세요 (상의/하의):"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp" />
 
     <Spinner
         android:id="@+id/categorySpinner"
@@ -25,7 +33,9 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="따뜻함 레벨 (1 ~ 7):" />
+        android:text="따뜻함 레벨 (1 ~ 7):"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp"/>
 
     <EditText
         android:id="@+id/editTextWarmth"

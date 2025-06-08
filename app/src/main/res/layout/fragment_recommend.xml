@@ -8,13 +8,15 @@
     android:padding="16dp"
     tools:context=".RecommendFragment">
 
+
+
     <!-- 날짜 선택 -->
     <TextView
         android:id="@+id/textViewDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="날짜 선택:"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -34,8 +36,8 @@
         android:id="@+id/textViewTimeRange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="활동 시간: 9시 ~ 18시"
-        android:textSize="16sp"
+        android:text="활동 시간: 9시 ~ 18시 (기본)"
+        android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/textViewDate"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,17 +64,19 @@
         android:layout_height="wrap_content"
         android:text="실외 활동 위주"
         app:layout_constraintTop_toBottomOf="@id/timeRangeSlider"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         android:layout_marginTop="16dp" />
 
     <!-- 추천받기 버튼 -->
-    <Button
+    <android.widget.Button
         android:id="@+id/buttonRecommend"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="추천받기"
         app:layout_constraintTop_toBottomOf="@id/checkbox_outdoor"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="24dp"
+        android:layout_margin="2dp"
+        android:background="@drawable/btn_blue" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

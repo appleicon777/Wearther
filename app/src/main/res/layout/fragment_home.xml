@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
     android:background="#F5F5F5">
 
     <ProgressBar
@@ -13,7 +12,18 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="12dp"
         android:visibility="gone" />
-
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:scaleType="centerCrop"
+        android:layout_gravity="top"
+        android:src="@drawable/seoul_sky"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Forecast"
+        android:textSize="40dp"
+        android:padding="16dp"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

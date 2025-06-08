@@ -27,19 +27,23 @@
             android:orientation="horizontal"
             android:gravity="center">
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/buttonAddClothing"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="옷 등록"/>
+                android:text="옷 등록"
+                android:layout_margin="5dp"
+                android:background="@drawable/btn_blue"/>
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/buttonDeleteClothing"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="옷 삭제"/>
+                android:text="옷 삭제"
+                android:layout_margin="5dp"
+                android:background="@drawable/btn_blue"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView

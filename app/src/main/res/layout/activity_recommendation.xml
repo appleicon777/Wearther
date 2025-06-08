@@ -15,6 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="추천 정보를 여기에 표시합니다"
+            android:gravity="center_horizontal"
             android:textSize="18sp"
             android:padding="8dp"
             android:textStyle="bold" />
@@ -24,12 +25,13 @@
             android:id="@+id/recommendationRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
+            android:layout_margin="10dp" />
 
         <!-- 피드백 질문 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:text="다시 추천해주세요!"
             android:textSize="16sp"
             android:layout_marginTop="24dp"
@@ -42,25 +44,31 @@
             android:orientation="horizontal"
             android:gravity="center">
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/buttonTooCold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="너무 추웠어요" />
+                android:text="Warmer"
+                android:layout_margin="5dp"
+                android:background="@drawable/btn_white" />
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/buttonJustRight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="적당했어요"
-                android:layout_marginStart="8dp" />
+                android:text="Perfect"
+                android:layout_marginStart="8dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/btn_blue" />
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/buttonTooHot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="너무 더웠어요"
-                android:layout_marginStart="8dp" />
+                android:text="Cooler"
+                android:layout_marginStart="8dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/btn_white"/>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

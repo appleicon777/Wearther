@@ -38,7 +38,7 @@ public class RecommendationActivity extends AppCompatActivity {
         conditionKey = minTemp + ":" + maxTemp + ":" + weather + ":" + activityTime;
 
         if (recommendedItems != null && !recommendedItems.isEmpty()) {
-            recommendationText.setText("추천된 옷 조합입니다:");
+            recommendationText.setText("Wearther Recommendation");
             recommendationAdapter = new RecommendationAdapter(recommendedItems);
             recommendationRecyclerView.setAdapter(recommendationAdapter);
         } else {
@@ -49,9 +49,9 @@ public class RecommendationActivity extends AppCompatActivity {
         Button buttonJustRight = findViewById(R.id.buttonJustRight);
         Button buttonTooHot = findViewById(R.id.buttonTooHot);
 
-        buttonTooCold.setText("너무 추워요");
-        buttonJustRight.setText("적당해요");
-        buttonTooHot.setText("너무 더워요");
+        buttonTooCold.setText("Warmer");
+        buttonJustRight.setText("Perfect");
+        buttonTooHot.setText("Cooler");
 
         buttonTooCold.setOnClickListener(v -> {
             saveFeedback("too_cold");

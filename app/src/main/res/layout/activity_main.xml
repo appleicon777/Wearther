@@ -5,6 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+
     <!-- ViewPager2 for fragment screens -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager"
