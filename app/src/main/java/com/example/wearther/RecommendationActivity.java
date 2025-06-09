@@ -87,45 +87,47 @@ public class RecommendationActivity extends AppCompatActivity {
     // 새 추천을 위해 Firestore에서 옷 데이터를 다시 불러와 ClothingRecommender에 보정값을 반영
     private void reloadRecommendation(int feedbackAdjustment) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();  // 현재 userId 획득
         db.collection("clothingItems")
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                ArrayList<ClothingItem> allClothes = new ArrayList<>();
-                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    ClothingItem item = new ClothingItem();
-                    item.name = doc.getString("label");
-                    item.imageUri = doc.getString("imageUrl");
-                    Long warmth = doc.getLong("warmthLevel");
-                    item.warmthLevel = warmth != null ? warmth.intValue() : 0;
-                    item.category = doc.getString("category");
-                    allClothes.add(item);
-                }
-                // 재추천용 WeatherInfo 생성 (여기서는 간단히 minTemp를 온도로 사용)
-                WeatherInfo weatherInfo = new WeatherInfo();
-                weatherInfo.temp = getIntent().getIntExtra("minTemp", 0);
-                weatherInfo.windSpeed = 0;
-                String weatherStr = getIntent().getStringExtra("weather");
-                weatherInfo.isRaining = "비".equals(weatherStr);
-                weatherInfo.isSnowing = "눈".equals(weatherStr);
-                // activityTime은 "start시 ~ end시" 형식이므로 여기서는 기본값 사용
-                int startHour = 9;
-                int endHour = 18;
-
-                List<ClothingItem> newRecommended = ClothingRecommender.recommend(allClothes, weatherInfo, startHour, endHour, feedbackAdjustment);
-
-                runOnUiThread(() -> {
-                    if (newRecommended != null && !newRecommended.isEmpty()) {
-                        recommendationText.setText("추천된 옷 조합입니다:");
-                        recommendationAdapter = new RecommendationAdapter(newRecommended);
-                        recommendationRecyclerView.setAdapter(recommendationAdapter);
-                    } else {
-                        recommendationText.setText("추천 가능한 옷이 없습니다.");
-                    }
-                });
-            })
-            .addOnFailureListener(e ->
-                runOnUiThread(() ->
-                        Toast.makeText(RecommendationActivity.this, "재추천 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show())
-            );
+          .whereEqualTo("userId", currentUserId)  // userId 필터 추가
+          .get()
+          .addOnSuccessListener(queryDocumentSnapshots -> {
+              ArrayList<ClothingItem> allClothes = new ArrayList<>();
+              for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                  ClothingItem item = new ClothingItem();
+                  item.name = doc.getString("label");
+                  item.imageUri = doc.getString("imageUrl");
+                  Long warmth = doc.getLong("warmthLevel");
+                  item.warmthLevel = warmth != null ? warmth.intValue() : 0;
+                  item.category = doc.getString("category");
+                  allClothes.add(item);
+              }
+              // 재추천용 WeatherInfo 생성 (여기서는 간단히 minTemp를 온도로 사용)
+              WeatherInfo weatherInfo = new WeatherInfo();
+              weatherInfo.temp = getIntent().getIntExtra("minTemp", 0);
+              weatherInfo.windSpeed = 0;
+              String weatherStr = getIntent().getStringExtra("weather");
+              weatherInfo.isRaining = "비".equals(weatherStr);
+              weatherInfo.isSnowing = "눈".equals(weatherStr);
+              // activityTime은 "start시 ~ end시" 형식이므로 여기서는 기본값 사용
+              int startHour = 9;
+              int endHour = 18;
+  
+              List<ClothingItem> newRecommended = ClothingRecommender.recommend(allClothes, weatherInfo, startHour, endHour, feedbackAdjustment);
+  
+              runOnUiThread(() -> {
+                  if (newRecommended != null && !newRecommended.isEmpty()) {
+                      recommendationText.setText("추천된 옷 조합입니다:");
+                      recommendationAdapter = new RecommendationAdapter(newRecommended);
+                      recommendationRecyclerView.setAdapter(recommendationAdapter);
+                  } else {
+                      recommendationText.setText("추천 가능한 옷이 없습니다.");
+                  }
+              });
+          })
+          .addOnFailureListener(e ->
+              runOnUiThread(() ->
+                      Toast.makeText(RecommendationActivity.this, "재추천 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show())
+          );
     }
 }
